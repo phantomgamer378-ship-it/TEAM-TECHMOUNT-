@@ -22,42 +22,47 @@ graph TD
     classDef branch fill:#059669,stroke:#047857,stroke-width:2px,color:#fff,rx:5px,ry:5px;
     classDef policy fill:#7c3aed,stroke:#6d28d9,stroke-width:2px,color:#fff,rx:5px,ry:5px;
     classDef action fill:#ea580c,stroke:#c2410c,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+    classDef tech fill:#1f2937,stroke:#374151,stroke-width:2px,color:#fff,rx:5px,ry:5px;
 
-    Audio["AUDIO INPUT<br/>(upload · mic · stream)"] --> Ingest["AUDIO PREPROCESSING<br/>(16 kHz Mono)"]
+    subgraph Architecture Flow
+        Audio["AUDIO INPUT<br/>(upload · mic · stream)"] --> Ingest["AUDIO PREPROCESSING<br/>(16 kHz Mono)"]
+        
+        Ingest --> Split{Parallel Analysis}
+        
+        Split --> VoiceTrust["VOICE TRUST ENGINE<br/>AASIST Anti-Spoof"]
+        Split --> ASR["ASR BRANCH<br/>(Hindi / Marathi)"]
+        Split --> Context["CONTEXT SIGNALS"]
+        
+        ASR --> ScamEngine["SCAM INTENT ENGINE<br/>(NLP Rule Matcher)"]
+        
+        VoiceTrust --> Fusion["DYNAMIC RISK FUSION<br/>(Risk Score 0-100)"]
+        ScamEngine --> Fusion
+        Context --> Fusion
+        
+        Fusion --> Policy["POLICY ENGINE"]
+        
+        Policy -->|LOW / MEDIUM| Continue["CONTINUE / LOG"]
+        Policy -->|HIGH / CRITICAL| Liveness["LIVENESS CHALLENGE<br/>(Challenge-Response)"]
+        
+        Continue --> Dashboard["THREAT DASHBOARD & WARNINGS"]
+        Liveness --> Dashboard
+    end
 
-    Ingest --> Split{Parallel Analysis}
-
-    Split --> VoiceTrust["VOICE TRUST ENGINE<br/>AASIST Anti-Spoof"]
-    Split --> ASR["ASR BRANCH<br/>(Hindi / Marathi)"]
-    Split --> Context["CONTEXT SIGNALS"]
-
-    ASR --> ScamEngine["SCAM INTENT ENGINE<br/>(NLP Rule Matcher)"]
-
-    VoiceTrust --> Fusion["DYNAMIC RISK FUSION<br/>(Risk Score 0-100)"]
-    ScamEngine --> Fusion
-    Context --> Fusion
-
-    Fusion --> Policy["POLICY ENGINE"]
-
-    Policy -->|LOW / MEDIUM| Continue["CONTINUE / LOG"]
-    Policy -->|HIGH / CRITICAL| Liveness["LIVENESS CHALLENGE<br/>(Challenge-Response)"]
-
-    Continue --> Dashboard["THREAT DASHBOARD & WARNINGS"]
-    Liveness --> Dashboard
+    subgraph Technologies
+        T1["Python 3.11"]
+        T2["FastAPI"]
+        T3["PyTorch (AASIST-L)"]
+        T4["IndicConformer"]
+        T5["SQLite"]
+        T6["Flutter (Dart)"]
+    end
 
     class Ingest,Fusion core;
     class VoiceTrust,ASR,Context,ScamEngine branch;
     class Policy policy;
     class Continue,Liveness action;
+    class T1,T2,T3,T4,T5,T6 tech;
 ```
-
-## Tech Stack
-
-- **Backend Framework**: FastAPI (Python 3.11)
-- **Deepfake & Voice Detection**: AASIST-L (PyTorch)
-- **Speech-to-Text (ASR)**: IndicConformer / faster-whisper (Hindi & Marathi)
-- **Database**: SQLite (Threat history & session state)
-- **Frontend Client**: Flutter (Dart)
 
 ## Current status — Phase 1 (backend skeleton) ✅
 
