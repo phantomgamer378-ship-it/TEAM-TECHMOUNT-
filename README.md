@@ -23,27 +23,32 @@ graph TD
     classDef policy fill:#7c3aed,stroke:#6d28d9,stroke-width:2px,color:#fff,rx:5px,ry:5px;
     classDef action fill:#ea580c,stroke:#c2410c,stroke-width:2px,color:#fff,rx:5px,ry:5px;
 
-    Audio["AUDIO INPUT<br/>(upload · mic · stream)"] --> Ingest["AUDIO PREPROCESSING<br/>(16 kHz Mono)"] :::core
+    Audio["AUDIO INPUT<br/>(upload · mic · stream)"] --> Ingest["AUDIO PREPROCESSING<br/>(16 kHz Mono)"]
 
     Ingest --> Split{Parallel Analysis}
 
-    Split --> VoiceTrust["VOICE TRUST ENGINE<br/>AASIST Anti-Spoof"] :::branch
-    Split --> ASR["ASR BRANCH<br/>(Hindi / Marathi)"] :::branch
-    Split --> Context["CONTEXT SIGNALS"] :::branch
+    Split --> VoiceTrust["VOICE TRUST ENGINE<br/>AASIST Anti-Spoof"]
+    Split --> ASR["ASR BRANCH<br/>(Hindi / Marathi)"]
+    Split --> Context["CONTEXT SIGNALS"]
 
-    ASR --> ScamEngine["SCAM INTENT ENGINE<br/>(NLP Rule Matcher)"] :::branch
+    ASR --> ScamEngine["SCAM INTENT ENGINE<br/>(NLP Rule Matcher)"]
 
-    VoiceTrust --> Fusion["DYNAMIC RISK FUSION<br/>(Risk Score 0-100)"] :::core
+    VoiceTrust --> Fusion["DYNAMIC RISK FUSION<br/>(Risk Score 0-100)"]
     ScamEngine --> Fusion
     Context --> Fusion
 
-    Fusion --> Policy["POLICY ENGINE"] :::policy
+    Fusion --> Policy["POLICY ENGINE"]
 
-    Policy -->|LOW / MEDIUM| Continue["CONTINUE / LOG"] :::action
-    Policy -->|HIGH / CRITICAL| Liveness["LIVENESS CHALLENGE<br/>(Challenge-Response)"] :::action
+    Policy -->|LOW / MEDIUM| Continue["CONTINUE / LOG"]
+    Policy -->|HIGH / CRITICAL| Liveness["LIVENESS CHALLENGE<br/>(Challenge-Response)"]
 
     Continue --> Dashboard["THREAT DASHBOARD & WARNINGS"]
     Liveness --> Dashboard
+
+    class Ingest,Fusion core;
+    class VoiceTrust,ASR,Context,ScamEngine branch;
+    class Policy policy;
+    class Continue,Liveness action;
 ```
 
 ## Current status — Phase 1 (backend skeleton) ✅

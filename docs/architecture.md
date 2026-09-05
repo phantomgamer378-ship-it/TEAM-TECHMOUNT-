@@ -59,33 +59,39 @@ graph TD
     classDef action fill:#ea580c,stroke:#c2410c,stroke-width:2px,color:#fff,rx:5px,ry:5px;
     classDef db fill:#475569,stroke:#334155,stroke-width:2px,color:#fff,rx:5px,ry:5px;
 
-    Audio["AUDIO / CALL<br/>(upload · mic · WS chunks)"] --> Ingestion["AUDIO INGESTION<br/>(POST /api/session)"] :::core
-    Ingestion --> Preprocess["AUDIO PREPROCESSING<br/>validate → mono → 16 kHz → normalize"] :::core
+    Audio["AUDIO / CALL<br/>(upload · mic · WS chunks)"] --> Ingestion["AUDIO INGESTION<br/>(POST /api/session)"]
+    Ingestion --> Preprocess["AUDIO PREPROCESSING<br/>validate → mono → 16 kHz → normalize"]
 
     Preprocess --> Split{Parallel Branches}
 
-    Split --> VoiceTrust["VOICE TRUST ENGINE<br/>AASIST anti-spoof<br/>(prototype)"] :::branch
-    Split --> ASR["ASR BRANCH<br/>Language ID (hi/mr/code-mix)"] :::branch
-    Split --> Context["CONTEXT SIGNALS<br/>(stub, 0.0)"] :::branch
+    Split --> VoiceTrust["VOICE TRUST ENGINE<br/>AASIST anti-spoof<br/>(prototype)"]
+    Split --> ASR["ASR BRANCH<br/>Language ID (hi/mr/code-mix)"]
+    Split --> Context["CONTEXT SIGNALS<br/>(stub, 0.0)"]
 
-    ASR -->|HINDI/MARATHI/CODE-MIXED TEXT| ScamEngine["SCAM INTENT ENGINE<br/>intent evidence"] :::branch
+    ASR -->|HINDI/MARATHI/CODE-MIXED TEXT| ScamEngine["SCAM INTENT ENGINE<br/>intent evidence"]
 
     VoiceTrust --> Identity["SPEAKER / IDENTITY LAYER<br/>(prototype: stub / demo profile only)"]
     ScamEngine --> Identity
     Context --> Identity
 
     Identity --> Norm["EVIDENCE NORMALIZATION<br/>(one schema, source-tagged)"]
-    Norm --> Fusion["DYNAMIC RISK FUSION<br/>risk(t) per chunk + final score"] :::core
-    Fusion --> Policy["POLICY ENGINE<br/>(pure: tier → action)"] :::policy
+    Norm --> Fusion["DYNAMIC RISK FUSION<br/>risk(t) per chunk + final score"]
+    Fusion --> Policy["POLICY ENGINE<br/>(pure: tier → action)"]
 
-    Policy -->|LOW / MEDIUM| Continue["CONTINUE"] :::action
-    Policy -->|HIGH / CRITICAL| Liveness["ADAPTIVE LIVENESS<br/>(monitor → challenge)"] :::action
+    Policy -->|LOW / MEDIUM| Continue["CONTINUE"]
+    Policy -->|HIGH / CRITICAL| Liveness["ADAPTIVE LIVENESS<br/>(monitor → challenge)"]
 
     Continue --> Final["FINAL RISK UPDATE"]
     Liveness --> Final
 
-    Final --> Action["WARN / VERIFY / PREVENT<br/>(recommendation)"] :::action
-    Action --> DB["DASHBOARD / API / LOG<br/>(SQLite, no raw audio)"] :::db
+    Final --> Action["WARN / VERIFY / PREVENT<br/>(recommendation)"]
+    Action --> DB["DASHBOARD / API / LOG<br/>(SQLite, no raw audio)"]
+
+    class Ingestion,Preprocess,Fusion core;
+    class VoiceTrust,ASR,Context,ScamEngine branch;
+    class Policy policy;
+    class Continue,Liveness,Action action;
+    class DB db;
 ```
 
 **Why multiple branches (the conceptual distinction judges must hear):**
