@@ -32,7 +32,7 @@ below was designed around it, not from scratch.
 | 10 | policy engine | ✅ **DONE** — pure `decide()`: LOW→CONTINUE, MEDIUM→CAUTION, HIGH→VERIFY_CALLER, CRITICAL→WARN; fail-safe (unknown level → WARN); unit-tested |
 | 11 | liveness | ✅ **DONE** — tiered via `liveness_decision()` (NONE<40 / MONITOR 40–69 / CHALLENGE 70–84 / MANDATORY ≥85); fixed prototype phrase; challenge expiry (`LIVENESS_EXPIRY_SECONDS`, late responses → FAILED); states PENDING/PASSED/SUSPICIOUS/FAILED; start/verify endpoints persist outcomes |
 | — | **HTTP API wiring** (was v2 Phase 8) | ✅ **DONE** — one orchestrator (`app/pipeline.py`) shared by the terminal card AND `POST /api/analyze/audio`; `POST /api/session`, `GET /api/history`, `GET /api/session/{id}`; uploads validated (type/size), temp audio deleted after analysis (privacy_mode); every response fits the two frozen shapes; verified end-to-end with curl + real models |
-| 12 | WebSocket dynamic risk | ❌ not built |
+| 12 | WebSocket dynamic risk | ✅ **DONE** — `WS /ws/session/{id}`: documented protocol (start/audio/end → status + one `risk_update` per chunk + final canonical response), simulated real-time pacing (§15), CPU work in a worker thread (socket stays responsive), results persisted like HTTP; `scripts/ws_client.py` = live terminal dashboard; one `stream_analysis()` generator powers all three surfaces |
 | 13 | Flutter dashboard | ❌ not built |
 | 14 | message scanner | ❌ not built |
 | 15 | URL checker | ❌ not built |
@@ -51,61 +51,41 @@ context risk (hard 0.0) · speaker identity (no signal source yet).
 
 One flow, five parallel evidence branches, one fusion, one policy layer:
 
-```
-                AUDIO / CALL (upload · mic · simulated WS chunks)
-                                  |
-                                  v
-                        AUDIO INGESTION  (POST /api/session)
-                                  |
-                                  v
-                       AUDIO PREPROCESSING  (§3 done)
-                    validate → mono → 16 kHz → normalize
-                                  |
-        +------------------+------+----------+------------------+
-        |                  |                 |                  |
-        v                  v                 v                  v
-  VOICE TRUST        ASR BRANCH       SCAM INTENT         CONTEXT
-  ENGINE                   |             ENGINE            SIGNALS
-  (prototype)              v                 |             (stub, 0.0)
-  AASIST anti-spoof   LANGUAGE ID            |
-  + Whisper branch    (hi/mr/code-mix)       v
-  (features stub)          |          intent evidence
-        |                  v                 |
-        |          HINDI/MARATHI/CODE-MIXED  |
-        |               TEXT                 |
-        |                  v                 |
-        |          SCAM INTENT ENGINE --------+
-        |                  |
-        +--------+---------+------------------+
-                 |
-                 v
-        SPEAKER / IDENTITY LAYER  (prototype: stub / demo profile only)
-                 |
-                 v
-        EVIDENCE NORMALIZATION  (one schema, source-tagged)
-                 |
-                 v
-        DYNAMIC RISK FUSION   risk(t) per chunk  +  final score
-                 |
-                 v
-            POLICY ENGINE  (pure: tier → action)
-                 |
-          +------+------+
-          |             |
-          v             v
-      LOW / MEDIUM    HIGH / CRITICAL
-          |             |
-          v             v
-       CONTINUE    ADAPTIVE LIVENESS (monitor → challenge)
-                        |
-                        v
-                 FINAL RISK UPDATE
-                        |
-                        v
-              WARN / VERIFY / PREVENT (recommendation)
-                        |
-                        v
-              DASHBOARD / API / LOG (SQLite, no raw audio)
+```mermaid
+graph TD
+    classDef core fill:#2563eb,stroke:#1d4ed8,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+    classDef branch fill:#059669,stroke:#047857,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+    classDef policy fill:#7c3aed,stroke:#6d28d9,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+    classDef action fill:#ea580c,stroke:#c2410c,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+    classDef db fill:#475569,stroke:#334155,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+
+    Audio["AUDIO / CALL<br/>(upload · mic · WS chunks)"] --> Ingestion["AUDIO INGESTION<br/>(POST /api/session)"] :::core
+    Ingestion --> Preprocess["AUDIO PREPROCESSING<br/>validate → mono → 16 kHz → normalize"] :::core
+
+    Preprocess --> Split{Parallel Branches}
+
+    Split --> VoiceTrust["VOICE TRUST ENGINE<br/>AASIST anti-spoof<br/>(prototype)"] :::branch
+    Split --> ASR["ASR BRANCH<br/>Language ID (hi/mr/code-mix)"] :::branch
+    Split --> Context["CONTEXT SIGNALS<br/>(stub, 0.0)"] :::branch
+
+    ASR -->|HINDI/MARATHI/CODE-MIXED TEXT| ScamEngine["SCAM INTENT ENGINE<br/>intent evidence"] :::branch
+
+    VoiceTrust --> Identity["SPEAKER / IDENTITY LAYER<br/>(prototype: stub / demo profile only)"]
+    ScamEngine --> Identity
+    Context --> Identity
+
+    Identity --> Norm["EVIDENCE NORMALIZATION<br/>(one schema, source-tagged)"]
+    Norm --> Fusion["DYNAMIC RISK FUSION<br/>risk(t) per chunk + final score"] :::core
+    Fusion --> Policy["POLICY ENGINE<br/>(pure: tier → action)"] :::policy
+
+    Policy -->|LOW / MEDIUM| Continue["CONTINUE"] :::action
+    Policy -->|HIGH / CRITICAL| Liveness["ADAPTIVE LIVENESS<br/>(monitor → challenge)"] :::action
+
+    Continue --> Final["FINAL RISK UPDATE"]
+    Liveness --> Final
+
+    Final --> Action["WARN / VERIFY / PREVENT<br/>(recommendation)"] :::action
+    Action --> DB["DASHBOARD / API / LOG<br/>(SQLite, no raw audio)"] :::db
 ```
 
 **Why multiple branches (the conceptual distinction judges must hear):**

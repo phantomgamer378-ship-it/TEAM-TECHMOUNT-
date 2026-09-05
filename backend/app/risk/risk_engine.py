@@ -97,6 +97,47 @@ class RiskEngine:
 
     # --------------------------------------------------------------- Risk(t)
 
+    def fuse_point(
+        self,
+        state: Dict,
+        t: float,
+        voice_raw: Optional[float] = None,
+        scam_raw: Optional[float] = None,
+        context_risk: Optional[float] = None,
+        identity_risk: Optional[float] = None,
+        liveness_risk: Optional[float] = None,
+    ) -> Dict:
+        """Fuse ONE chunk observation, carrying evidence forward via `state`.
+
+        Evidence accumulates (§DYNAMIC RISK SCORE: Risk(t+1) = Risk(t) + new
+        evidence): scam = running max; voice = running max (CAVEAT, stated in
+        docs/demo: a single noisy window persists; a temporal model replaces
+        this in the future). The returned point records the RAW voice
+        observation. Pass the same `state` dict across chunks; missing values
+        (never measured) are excluded, not guessed.
+        """
+        if scam_raw is not None:
+            state["max_scam"] = max(state.get("max_scam", 0.0), self._clamp(scam_raw))
+            state["seen_scam"] = True  # a measured signal — even a 0.0 — counts
+        if voice_raw is not None:
+            v = self._clamp(voice_raw)
+            state["max_voice"] = v if state.get("max_voice") is None else max(state["max_voice"], v)
+
+        fused = self.fuse(
+            voice_risk=state.get("max_voice"),
+            scam_risk=state.get("max_scam") if state.get("seen_scam") else None,
+            context_risk=context_risk,
+            identity_risk=identity_risk,
+            liveness_risk=liveness_risk,
+        )
+        return {
+            "t": float(t),
+            "voice_risk": voice_raw,  # RAW observation; fusion used the accumulators
+            "scam_risk": round(state.get("max_scam", 0.0), 4) if state.get("seen_scam") else None,
+            "risk_score": fused["risk_score"],
+            "level": fused["risk_level"],
+        }
+
     def fuse_timeline(
         self,
         voice_risks: List[Optional[float]],
@@ -105,44 +146,15 @@ class RiskEngine:
         identity_risk: Optional[float] = None,
         liveness_risk: Optional[float] = None,
     ) -> List[Dict]:
-        """One fusion point per chunk (t = chunk index in seconds).
-
-        Evidence accumulates — the prototype does not "un-hear" anything
-        (§DYNAMIC RISK SCORE: Risk(t+1) = Risk(t) + new evidence):
-          * scam: running MAX — once a scam concept is said, it persists;
-          * voice: running MAX — a window that sounded synthetic keeps
-            counting (CAVEAT, stated in docs/demo: a single noisy window
-            persists too; a temporal model replaces this in the future).
-        Each point still records the RAW per-window voice observation.
-        Missing values (never measured) are excluded, not guessed.
-        """
-        points: List[Dict] = []
-        max_scam = 0.0
-        seen_scam = False  # scam becomes a "present" signal only once some
-                           # transcript has actually been analyzed — a signal
-                           # that was never measured must not dilute the fusion
-        max_voice = None   # None until the first real voice window exists
-        for t, (v, s) in enumerate(zip(voice_risks, scam_risks)):
-            if s is not None:
-                max_scam = max(max_scam, self._clamp(s))
-                seen_scam = True
-            if v is not None:
-                max_voice = self._clamp(v) if max_voice is None else max(max_voice, self._clamp(v))
-            fused = self.fuse(
-                voice_risk=max_voice,
-                scam_risk=max_scam if seen_scam else None,
-                context_risk=context_risk,
-                identity_risk=identity_risk,
-                liveness_risk=liveness_risk,
-            )
-            points.append({
-                "t": float(t),
-                "voice_risk": v,  # RAW observation; fusion used the running mean
-                "scam_risk": round(max_scam, 4) if seen_scam else None,
-                "risk_score": fused["risk_score"],
-                "level": fused["risk_level"],
-            })
-        return points
+        """Batch form of fuse_point — one fusion point per chunk index."""
+        state: Dict = {}
+        return [
+            self.fuse_point(state, t, v, s,
+                            context_risk=context_risk,
+                            identity_risk=identity_risk,
+                            liveness_risk=liveness_risk)
+            for t, (v, s) in enumerate(zip(voice_risks, scam_risks))
+        ]
 
     # ---------------------------------------------------------------- helpers
 

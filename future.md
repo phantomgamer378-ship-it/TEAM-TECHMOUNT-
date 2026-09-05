@@ -6,15 +6,14 @@
 > upgraded API contract (voice_trust / asr / attack_types / explanation /
 > risk_timeline / 4-tier risk / policy engine), and the gap analysis mapping
 > v2 work → v3 phases. The v3 "FIRST TASK" (12 design items) is delivered in
-> that document. **Status: v3 Phases 1–11 + HTTP API complete — the full
-> pipeline is served over HTTP**: `POST /api/analyze/audio` returns the
-> canonical contract (real voice+ASR+scam, attack types, risk_timeline,
-> tiered liveness, source-tagged explanation, recommendation) verified with
-> curl + real models; session/history/liveness endpoints live; one shared
-> orchestrator (`app/pipeline.py`) powers both the terminal card and the API.
-> IndicConformer implemented but GATED on HF. 124 tests green.
-> **Next: Phase 12 — WebSocket dynamic risk streaming; then message/URL
-> scanners (14/15) and Flutter (13).**
+> that document. **Status: v3 Phases 1–12 complete — full pipeline served over
+> HTTP *and* WebSocket**: `POST /api/analyze/audio` + `WS /ws/session/{id}`
+> (live Risk(t) streaming, one message per chunk) + session/history/liveness
+> endpoints, all powered by one `stream_analysis()` orchestrator; real
+> AASIST-L + faster-whisper + rule engine verified with curl and the live
+> terminal client. IndicConformer implemented but GATED on HF. 126 tests
+> green. **Next: Phases 14/15 — message + URL scanners (small); Phase 13 —
+> Flutter dashboard + team demo recordings; Phase 16 — trusted-voice stub.**
 > The roadmap, risk register and Q&A below remain valid.
 
 > Single source of truth for **what's built, what's next, and where the real

@@ -22,6 +22,7 @@ from app.api.health import router as health_router
 from app.api.audio import router as audio_router
 from app.api.liveness import router as liveness_router
 from app.api.session import router as session_router
+from app.api.websocket import router as websocket_router
 from app.config import settings
 from app.database import database as db
 from app.services import ServiceContainer
@@ -76,6 +77,7 @@ app.include_router(health_router)
 app.include_router(session_router)
 app.include_router(audio_router)
 app.include_router(liveness_router)
+app.include_router(websocket_router)
 
 
 @app.get("/", tags=["meta"])

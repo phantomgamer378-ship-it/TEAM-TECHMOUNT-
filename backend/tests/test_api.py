@@ -149,6 +149,63 @@ def test_analyze_then_history_and_session(demo_client):
 
 # ------------------------------------------------------------- real pipeline
 
+def test_ws_stream_sends_one_update_per_chunk_then_final(demo_client):
+    """§12 — WS protocol: status events, one risk_update per chunk, final
+    canonical response; results persisted like the HTTP route."""
+    import base64
+
+    sid = "ws-test-001"
+    with demo_client.websocket_connect(f"/ws/session/{sid}") as ws:
+        ws.send_json({"type": "start", "lang": "hi"})
+        ws.send_json({"type": "audio",
+                      "data": base64.b64encode(DEMO_AUDIO.read_bytes()).decode(),
+                      "fmt": "wav"})
+        ws.send_json({"type": "end"})
+
+        events = []
+        while True:
+            msg = ws.receive_json()
+            events.append(msg)
+            if msg["type"] in ("final", "error"):
+                break
+
+    kinds = [e["type"] for e in events]
+    assert "status" in kinds and "risk_update" in kinds, kinds
+    final = next(e for e in events if e["type"] == "final")
+    assert final["response"]["risk"]["level"] in ("MEDIUM", "HIGH")
+
+    updates = [e for e in events if e["type"] == "risk_update"]
+    model = AnalysisResponse(**final["response"])  # contract validation
+    assert len(model.risk_timeline) == len(updates)          # 1 msg per chunk
+    assert [p.risk_score for p in model.risk_timeline] == \
+           [u["risk_score"] for u in updates]                # identical points
+
+    # persisted like the HTTP route
+    hist = demo_client.get("/api/history?limit=50").json()
+    assert any(item["session_id"] == sid for item in hist["history"])
+
+
+def test_ws_protocol_errors_are_reported_not_crashed(demo_client):
+    import base64
+
+    with demo_client.websocket_connect("/ws/session/ws-test-err") as ws:
+        ws.send_json({"type": "end"})  # no audio at all
+        msg = ws.receive_json()
+        assert msg["type"] == "error" and "no audio" in msg["error"]
+
+    with demo_client.websocket_connect("/ws/session/ws-test-err2") as ws:
+        ws.send_json({"type": "audio",
+                      "data": base64.b64encode(b"garbage-not-audio").decode(),
+                      "fmt": "wav"})
+        ws.send_json({"type": "end"})
+        msg = ws.receive_json()
+        # corrupt audio → the standard fallback shape as the final event (§20)
+        assert msg["type"] == "final"
+        assert FallbackResponse(**msg["response"]).fallback_used is True
+
+
+# ------------------------------------------------------------- real pipeline
+
 @pytest.fixture(scope="module")
 def real_client():
     """TestClient on the REAL services (skipped when models unavailable)."""

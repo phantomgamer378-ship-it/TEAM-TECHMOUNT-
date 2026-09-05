@@ -16,10 +16,34 @@ AI voice cloning makes impersonation scams (fake bank officials, police,
 relatives) far more convincing. This prototype proves the intelligence
 pipeline end-to-end:
 
-```
-Audio → Voice/Deepfake Detection → Hindi/Marathi ASR → Scam Analysis
-      → Risk Fusion (0–100) → Liveness Challenge (HIGH only)
-      → Threat Warning → Dashboard
+```mermaid
+graph TD
+    classDef core fill:#2563eb,stroke:#1d4ed8,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+    classDef branch fill:#059669,stroke:#047857,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+    classDef policy fill:#7c3aed,stroke:#6d28d9,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+    classDef action fill:#ea580c,stroke:#c2410c,stroke-width:2px,color:#fff,rx:5px,ry:5px;
+
+    Audio["AUDIO INPUT<br/>(upload · mic · stream)"] --> Ingest["AUDIO PREPROCESSING<br/>(16 kHz Mono)"] :::core
+
+    Ingest --> Split{Parallel Analysis}
+
+    Split --> VoiceTrust["VOICE TRUST ENGINE<br/>AASIST Anti-Spoof"] :::branch
+    Split --> ASR["ASR BRANCH<br/>(Hindi / Marathi)"] :::branch
+    Split --> Context["CONTEXT SIGNALS"] :::branch
+
+    ASR --> ScamEngine["SCAM INTENT ENGINE<br/>(NLP Rule Matcher)"] :::branch
+
+    VoiceTrust --> Fusion["DYNAMIC RISK FUSION<br/>(Risk Score 0-100)"] :::core
+    ScamEngine --> Fusion
+    Context --> Fusion
+
+    Fusion --> Policy["POLICY ENGINE"] :::policy
+
+    Policy -->|LOW / MEDIUM| Continue["CONTINUE / LOG"] :::action
+    Policy -->|HIGH / CRITICAL| Liveness["LIVENESS CHALLENGE<br/>(Challenge-Response)"] :::action
+
+    Continue --> Dashboard["THREAT DASHBOARD & WARNINGS"]
+    Liveness --> Dashboard
 ```
 
 ## Current status — Phase 1 (backend skeleton) ✅
