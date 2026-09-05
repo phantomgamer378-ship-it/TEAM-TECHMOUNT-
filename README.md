@@ -51,6 +51,14 @@ graph TD
     class Continue,Liveness action;
 ```
 
+## Tech Stack
+
+- **Backend Framework**: FastAPI (Python 3.11)
+- **Deepfake & Voice Detection**: AASIST-L (PyTorch)
+- **Speech-to-Text (ASR)**: IndicConformer / faster-whisper (Hindi & Marathi)
+- **Database**: SQLite (Threat history & session state)
+- **Frontend Client**: Flutter (Dart)
+
 ## Current status — Phase 1 (backend skeleton) ✅
 
 - [x] FastAPI app + permissive CORS for local dev + `/api/health`
