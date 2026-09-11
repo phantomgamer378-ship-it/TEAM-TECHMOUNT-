@@ -232,6 +232,39 @@ def update_liveness_status(session_id: str, status: str) -> None:
 
 # ------------------------------------------------------------------- reads
 
+def save_voice_profile(label: str, user_id: Optional[int] = None,
+                       note: Optional[str] = None) -> Dict[str, Any]:
+    """Enroll a trusted-voice profile (§16 — conceptual flow).
+
+    PRIVACY: stores LABEL + METADATA only. The speaker embedding reference
+    arrives with the Phase-16 research track (training/README.md); raw audio
+    is never accepted or stored here.
+    """
+    created = _now()
+    with _connect() as conn:
+        cur = conn.execute(
+            "INSERT INTO voice_profiles (user_id, label, reference_meta, created_at)"
+            " VALUES (?, ?, ?, ?)",
+            (user_id, label, json.dumps({"note": note}) if note else None, created),
+        )
+    return {"id": cur.lastrowid, "label": label, "note": note,
+            "created_at": created, "embedding_status": "not_implemented_prototype"}
+
+
+def list_voice_profiles() -> List[Dict[str, Any]]:
+    with _connect() as conn:
+        rows = conn.execute(
+            "SELECT id, label, reference_meta, created_at FROM voice_profiles ORDER BY id"
+        ).fetchall()
+    out = []
+    for r in rows:
+        meta = json.loads(r["reference_meta"]) if r["reference_meta"] else {}
+        out.append({"id": r["id"], "label": r["label"], "note": meta.get("note"),
+                    "created_at": r["created_at"],
+                    "embedding_status": "not_implemented_prototype"})
+    return out
+
+
 def get_history(limit: int = 50) -> List[Dict[str, Any]]:
     """Recent analysis results, newest first (GET /api/history)."""
     with _connect() as conn:

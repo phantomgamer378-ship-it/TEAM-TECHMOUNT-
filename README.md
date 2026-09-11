@@ -64,20 +64,56 @@ graph TD
     class T1,T2,T3,T4,T5,T6 tech;
 ```
 
-## Current status — Phase 1 (backend skeleton) ✅
+## Current status — ALL 18 phases complete ✅
 
-- [x] FastAPI app + permissive CORS for local dev + `/api/health`
-- [x] `.env` configuration incl. `DEMO_MODE`
-- [x] §13 response-contract Pydantic schemas
-- [x] Placeholder services: VoiceDetector, ASRService, ScamDetector,
-      RiskEngine, LivenessService (each returns demo-mode mock output)
-- [x] requirements.txt, .env.example, smoke tests
-- [x] Phase 2: audio preprocessing (16 kHz mono pipeline + 1 s chunker)
-- [x] Phase 3: real AASIST-L voice/deepfake detector (loaded at startup, real
-      inference on CPU ~250 ms/clip, demo-mode fallback intact)
-- [ ] Phase 4–5: IndicConformer ASR + rule-based scam detector
-- [ ] Phase 6–9: risk fusion endpoint, liveness API, full wiring, WebSocket
-- [ ] Phase 10: Flutter dashboard
+- [x] FastAPI backend: frozen v3 contract, SQLite (privacy-first), health, CORS
+- [x] Audio preprocessing: 16 kHz mono pipeline + 1 s chunker (§14)
+- [x] **REAL** AASIST-L voice/deepfake detector (loaded once at startup, ~250 ms/clip CPU)
+- [x] **REAL** Hindi/Marathi ASR (faster-whisper default; IndicConformer ready but HF-gated)
+- [x] **REAL** scam rule engine (14 concepts, hi/mr/en + code-mixed, ASR spelling normalization)
+- [x] Attack-type classification · 5-signal risk fusion · per-second Risk(t) timeline · 4-tier policy engine
+- [x] Tiered adaptive liveness (expiry, PENDING/PASSED/SUSPICIOUS/FAILED)
+- [x] HTTP API: session · analyze/audio (canonical response + risk_timeline) · analyze/message · analyze/url · liveness · history
+- [x] WebSocket live-risk streaming (`WS /ws/session/{id}`) + terminal client (`scripts/ws_client.py`)
+- [x] Demo fallback system (`app/demo/*`, `USE_DEMO_SERVICES`, `--pure-demo`) — whole pipeline runs with zero models
+- [x] Evaluation harness (honest per-sample tables + EER) + fine-tuning learning path (`training/README.md`)
+- [x] Trusted-voice enrollment stub (metadata only; embedding model = research track)
+- [x] **Phase 13: Flutter dashboard** — Home (live health), Call Analysis (WS
+      stream → live Risk(t) chart → full verdict + liveness flow), Message/URL
+      scanners, Threat History, Trusted Contacts stub; `flutter analyze` clean,
+      `flutter build web` verified
+- Full plan: [future.md](future.md) · architecture: [docs/architecture.md](docs/architecture.md) · judge script: [docs/demo_script.md](docs/demo_script.md)
+
+## Run the Flutter dashboard
+
+```bash
+# 1) start the backend (from backend/, venv active)
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+# 2) run the app (from frontend/flutter_app/) — easiest target is Chrome
+flutter run -d chrome
+# Android emulator works too (backend auto-addressed via 10.0.2.2);
+# a real phone: ⚙ in the app → set http://<your-mac-LAN-IP>:8000
+```
+
+Home shows live system health; Call Analysis streams the risk timeline one
+update per second over WebSocket, then renders the full verdict (voice trust,
+transcript, indicators, attack types, liveness flow, source-tagged
+explanations, recommendation).
+
+## PROTOTYPE vs FUTURE PRODUCT (§27)
+
+| Capability | PROTOTYPE (now) | FUTURE PRODUCT |
+|---|---|---|
+| Audio source | uploaded WAV / mic file / simulated WS chunks | live WebRTC / SIP telephony stream |
+| Deepfake detection | pretrained AASIST-L, evaluated only on prototype clips | fine-tuned + calibrated on Indian-language data (`training/README.md`) |
+| ASR | off-the-shelf faster-whisper / IndicConformer | fine-tuned hi/mr + code-mixed, WER-tracked |
+| Scam detection | transparent keyword/pattern rules | trained classifier (TF-IDF → transformer) |
+| Risk fusion | fixed demo weights 0.30/0.20/0.30/0.10/0.10 | calibrated model on labelled outcomes |
+| Identity | enrollment stub; mismatch risk honestly null | speaker embeddings + cross-session trusted memory |
+| Liveness | fixed-phrase text match | randomized, replay-resistant, speaker verification |
+| Real time | simulated (paced WS updates) | streaming inference, media gateway |
+| Infra | one laptop, SQLite, permissive CORS | cloud, Postgres, locked CORS/auth, monitoring |
 
 ## Project structure
 
@@ -128,7 +164,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 curl http://127.0.0.1:8000/api/health
 ```
 
-Expected (Phase 1, demo mode on):
+Expected:
 
 ```json
 {
@@ -136,15 +172,22 @@ Expected (Phase 1, demo mode on):
   "app": "Voice Clone Shield",
   "version": "0.1.0",
   "demo_mode": true,
+  "privacy_mode": true,
+  "database": "connected",
   "services": {
-    "voice_detector": "demo_mode",
-    "asr_service": "demo_mode",
+    "voice_detector": "loaded",
+    "asr_service": "loaded",
     "scam_detector": "stateless",
     "risk_engine": "stateless",
-    "liveness_service": "stateless"
+    "liveness_service": "stateless",
+    "audio_processor": "stateless",
+    "speaker_verifier": "stateless"
   }
 }
 ```
+
+(With zero models downloaded, `voice_detector`/`asr_service` read `demo_mode`
+and every analysis is clearly-labelled demo output instead.)
 
 From a phone on the same Wi-Fi (Flutter connectivity check, §12):
 `curl http://<your-mac-LAN-IP>:8000/api/health` — find the IP with
@@ -191,9 +234,6 @@ deliberately unsupported (needs ffmpeg) — record/convert to WAV.
   speech** — the UI and every analysis response carry this disclaimer.
   Score semantics: `voice_risk = 1 − P(bonafide)`; the 0.5 decision threshold
   is an **uncalibrated prototype cut**.
-- **Risk fusion weights (0.40/0.40/0.20):** transparent placeholders, not
-  scientifically validated.
-- **Liveness (§9):** naive challenge-response; it does **not** defeat
-  sophisticated voice cloning.
-- Full PROTOTYPE-vs-FUTURE-PRODUCT table and roadmap land in this README in
-  Phase 14 (§27).
+- **Risk fusion weights (0.30·voice + 0.20·identity + 0.30·scam + 0.10·context + 0.10·liveness):** demo weights only — signals with no evidence are excluded and weights renormalized; exposed as `weights_used` in every response. Not scientifically validated.
+- **Liveness (§9):** fixed-phrase text match; it does **not** defeat sophisticated voice cloning.
+- The PROTOTYPE-vs-FUTURE-PRODUCT table is above; the full research roadmap (fine-tuning, datasets, MLOps) is in [`training/README.md`](training/README.md) and [`docs/architecture.md`](docs/architecture.md).

@@ -21,7 +21,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.health import router as health_router
 from app.api.audio import router as audio_router
 from app.api.liveness import router as liveness_router
+from app.api.messages import router as messages_router
 from app.api.session import router as session_router
+from app.api.urls import router as urls_router
+from app.api.voice_profiles import router as voice_profiles_router
 from app.api.websocket import router as websocket_router
 from app.config import settings
 from app.database import database as db
@@ -77,6 +80,9 @@ app.include_router(health_router)
 app.include_router(session_router)
 app.include_router(audio_router)
 app.include_router(liveness_router)
+app.include_router(messages_router)
+app.include_router(urls_router)
+app.include_router(voice_profiles_router)
 app.include_router(websocket_router)
 
 

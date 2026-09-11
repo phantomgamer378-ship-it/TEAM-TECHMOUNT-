@@ -213,6 +213,80 @@ class HistoryResponse(BaseModel):
     count: int = 0
 
 
+# ------------------------------------------------- message / URL scanners (§10)
+
+class MessageAnalysisRequest(BaseModel):
+    """POST /api/analyze/message body."""
+
+    text: str
+    session_id: Optional[str] = None
+
+
+class MessageAnalysisResponse(BaseModel):
+    """Supporting feature output (§MESSAGE SCANNER): risk, attack types,
+    evidence, recommended action — reuses the scam intelligence layer."""
+
+    session_id: str
+    status: Literal["complete", "partial"] = "complete"
+    text: str
+    scam_analysis: Optional[ScamAnalysis] = None
+    attack_types: List[str] = Field(default_factory=list)
+    risk: Optional[RiskAssessment] = None
+    policy_action: Optional[str] = None
+    explanation: List[str] = Field(default_factory=list)
+    recommendation: Optional[str] = None
+    fallback_used: bool = False
+    error: Optional[str] = None
+
+
+class URLAnalysisRequest(BaseModel):
+    """POST /api/analyze/url body."""
+
+    url: str
+    session_id: Optional[str] = None
+
+
+class URLAnalysisResponse(BaseModel):
+    """Supporting feature output (§URL CHECKER): structural heuristics only —
+    no live fetching, no threat-intelligence, no ML (prototype)."""
+
+    session_id: str
+    status: Literal["complete", "partial"] = "complete"
+    url: str
+    url_analysis: Optional[Dict[str, Any]] = None
+    risk: Optional[RiskAssessment] = None
+    policy_action: Optional[str] = None
+    explanation: List[str] = Field(default_factory=list)
+    recommendation: Optional[str] = None
+    fallback_used: bool = False
+    error: Optional[str] = None
+
+
+# ------------------------------------------------- trusted voice memory (§16)
+
+class VoiceProfileEnrollRequest(BaseModel):
+    """POST /api/voice-profile/enroll body (§TRUSTED VOICE MEMORY — conceptual flow)."""
+
+    label: str = Field(description='who this profile is, e.g. "mom", "team-lead"')
+    user_id: Optional[int] = None
+    note: Optional[str] = None
+
+
+class VoiceProfileResponse(BaseModel):
+    """Enrolled trusted-voice profile. PROTOTYPE: metadata only — the speaker
+    EMBEDDING model arrives with the Phase-16 research track; until then the
+    identity signal stays honestly null (see DemoSpeakerVerifier)."""
+
+    id: int
+    label: str
+    note: Optional[str] = None
+    created_at: str
+    embedding_status: str = Field(
+        default="not_implemented_prototype",
+        description="honest status — 'enrolled' only when a real embedding exists",
+    )
+
+
 class HealthResponse(BaseModel):
     """GET /api/health — per-service state + storage + privacy mode (§OBSERVABILITY)."""
 
