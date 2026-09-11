@@ -215,3 +215,77 @@ def analyze_audio(
         elif event[0] == "final":
             response, meta = event[1], event[2]
     return {"response": response or {}, "meta": meta}
+
+
+# ---------------------------------------------------------------------------
+# Supporting features (§MESSAGE SCANNER / §URL CHECKER) — they REUSE the same
+# intelligence layer (scam rules / URL heuristics + bands + policy), they do
+# not fork it. For a message there is no voice/identity/context signal, so
+# the scam score IS the content risk (documented, not hidden).
+# ---------------------------------------------------------------------------
+
+def analyze_message(services: ServiceContainer, text: str, session_id: str) -> Dict:
+    """Message scanner (Phase 14): text → scam intent → attack types → risk.
+
+    Returns a MessageAnalysisResponse dict; never raises (§20).
+    """
+    scam = services.scam_detector.analyze(text)
+
+    attack_types = attack_types_from_indicators(scam.get("indicators") or [])
+    score = round(services.risk_engine._clamp(scam.get("risk", 0.0)) * 100)
+    level = services.risk_engine.band(score)
+    action = decide(level)
+
+    explanation = list(scam.get("evidence") or [])
+    explanation.append(f"[fused] Content risk {score}/100 ({level}) — messages carry "
+                       f"no voice/identity/context signals in the prototype")
+    explanation.append(f"[policy] {level} → {action}")
+
+    return {
+        "session_id": session_id,
+        "status": "complete",
+        "text": text,
+        "scam_analysis": scam,
+        "attack_types": attack_types,
+        "risk": {"score": score, "level": level},
+        "policy_action": action,
+        "explanation": explanation,
+        "recommendation": RECOMMENDATIONS[level],
+        "fallback_used": False,
+        "error": None,
+    }
+
+
+def analyze_url(services: ServiceContainer, url: str, session_id: str) -> Dict:
+    """URL checker (Phase 15): structural heuristics → risk + reasons.
+
+    Returns a URLAnalysisResponse dict; never raises (§20).
+    """
+    result = services.url_checker.analyze(url)
+
+    score = round(services.risk_engine._clamp(result.get("risk", 0.0)) * 100)
+    level = services.risk_engine.band(score)
+    action = decide(level)
+
+    explanation = list(result.get("reasons") or [])
+    explanation.append(f"[fused] URL risk {score}/100 ({level}) — structural heuristics only, "
+                       f"no live fetching (prototype)")
+    explanation.append(f"[policy] {level} → {action}")
+
+    return {
+        "session_id": session_id,
+        "status": "complete",
+        "url": url,
+        "url_analysis": {
+            "risk": result.get("risk", 0.0),
+            "reasons": result.get("reasons", []),
+            "model": result.get("model", "heuristic_rules"),
+            "note": result.get("note"),
+        },
+        "risk": {"score": score, "level": level},
+        "policy_action": action,
+        "explanation": explanation,
+        "recommendation": RECOMMENDATIONS[level],
+        "fallback_used": False,
+        "error": None,
+    }

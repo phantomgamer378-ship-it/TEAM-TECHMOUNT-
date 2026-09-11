@@ -50,6 +50,9 @@ SPELLING_VARIANTS: Tuple[Tuple[str, str], ...] = (
     ("टीक", "ठीक"),
     ("क्रुपया", "कृपया"),
     ("तुम्चे", "तुमचे"),
+    # observed on the code-mixed demo clip (faster-whisper, Hinglish input):
+    ("बांक", "बैंक"),
+    ("के वाए सी", "केवाईसी"),
 )
 
 # --------------------------------------------------------------------------
@@ -61,7 +64,7 @@ CONCEPTS: List[Tuple[str, str, float, List[str]]] = [
         r"ओटीपी", r"\botp\b", r"पासवर्ड", r"\bpassword\b", r"\bpin\b", r"सीवीवी", r"\bcvv\b",
     ]),
     ("financial_transfer", "Financial transfer request", 0.30, [
-        r"पैस", r"रुपय", r"ट्रांसफर", r"\btransfer\b", r"भेज", r"पाठव",
+        r"पैस", r"रुपय", r"ट्रांसफर", r"\btransfer\b", r"पाठव",
         r"हजार", r"लाख", r"\bmoney\b",
     ]),
     ("bank_impersonation", "Bank impersonation", 0.25, [

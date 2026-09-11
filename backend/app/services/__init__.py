@@ -16,6 +16,7 @@ from app.services.asr_service import ASRService
 from app.services.audio_processor import AudioProcessor
 from app.services.liveness_service import LivenessService
 from app.services.scam_detector import ScamDetector
+from app.services.url_checker import URLChecker
 from app.services.voice_detector import VoiceDetector
 
 log = logging.getLogger(__name__)
@@ -29,6 +30,7 @@ class ServiceContainer:
     risk_engine: RiskEngine = field(default_factory=RiskEngine)
     liveness_service: LivenessService = field(default_factory=LivenessService)
     audio_processor: AudioProcessor = field(default_factory=AudioProcessor)
+    url_checker: URLChecker = field(default_factory=URLChecker)
     # Identity layer: stub until Phase 16 (returns null mismatch risk — honest).
     speaker_verifier: object = field(default_factory=lambda: _default_speaker_verifier())
 
@@ -64,6 +66,7 @@ class ServiceContainer:
             "risk_engine": self.risk_engine,
             "liveness_service": self.liveness_service,
             "audio_processor": self.audio_processor,
+            "url_checker": self.url_checker,
             "speaker_verifier": self.speaker_verifier,
         }
 
