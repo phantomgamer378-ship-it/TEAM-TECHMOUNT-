@@ -32,6 +32,11 @@ SCRIPTS = {
                                 "आपका खाता आज शाम को बंद हो जाएगा। "
                                 "अगर आप अभी अपना ओटीपी नहीं बताएंगे तो आपका पैसा डूब जाएगा। "
                                 "कृपया तुरंत अपना ओटीपी बताइए।"),
+    # Code-mixed (Hinglish) scam — demo scenario 4: mixed script + English
+    # words inside Hindi speech, exactly the ASR/rule hard case (§6).
+    "tts_hinglish_scam.mp3": ("hi",
+                              "नमस्ते sir, मैं आपके bank की ओर से बोल रहा हूँ। "
+                              "आपका KYC pending है, अभी अपना OTP बताइए।"),
 }
 
 

@@ -10,7 +10,8 @@ __pycache__/
 # Runtime data
 data/
 *.db
-backend/models/   # downloaded checkpoints (AASIST-L etc.) — re-download via scripts/
+# Downloaded checkpoints (AASIST-L etc.) — re-download via scripts/.
+backend/models/
 
 # OS / editor noise
 .DS_Store
