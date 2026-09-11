@@ -13,6 +13,10 @@ synthetically generated. Never present any clip as a real call recording.
 | `tts_hindi_scam.mp3` | **TTS-generated** Hindi §3 scam script — used to validate the real ASR path end-to-end | `scripts/generate_tts_samples.py` (gTTS) |
 | `tts_marathi_scam.mp3` | **TTS-generated** Marathi §3 scam script | `scripts/generate_tts_samples.py` (gTTS) |
 | `tts_hindi_normal.mp3` | **TTS-generated** normal-call control | `scripts/generate_tts_samples.py` (gTTS) |
+| `tts_hindi_scam_long.mp3` | **TTS-generated** multi-sentence Hindi scam — the dynamic-risk-timeline demo (Risk(t) climbs as bank claim → threat → OTP ask unfold) | `scripts/generate_tts_samples.py` (gTTS) |
+| `tts_hinglish_scam.mp3` | **TTS-generated** code-mixed (Hinglish) scam — demo scenario 4; exercises ASR spelling-variant normalization (बांक→बैंक, के वाए सी→केवाईसी) | `scripts/generate_tts_samples.py` (gTTS) |
+| `scam_hindi.txt` / `scam_marathi.txt` | §3 scam scripts as text — message-scanner demo (`POST /api/analyze/message`) | hand-written |
+| `normal_message.txt` | normal-call control text — shows the scanner does NOT flag ordinary chat | hand-written |
 
 ## Filename hints drive the demo mocks (§DEMO)
 
