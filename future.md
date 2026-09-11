@@ -6,14 +6,16 @@
 > upgraded API contract (voice_trust / asr / attack_types / explanation /
 > risk_timeline / 4-tier risk / policy engine), and the gap analysis mapping
 > v2 work → v3 phases. The v3 "FIRST TASK" (12 design items) is delivered in
-> that document. **Status: v3 Phases 1–12 complete — full pipeline served over
-> HTTP *and* WebSocket**: `POST /api/analyze/audio` + `WS /ws/session/{id}`
-> (live Risk(t) streaming, one message per chunk) + session/history/liveness
-> endpoints, all powered by one `stream_analysis()` orchestrator; real
-> AASIST-L + faster-whisper + rule engine verified with curl and the live
-> terminal client. IndicConformer implemented but GATED on HF. 126 tests
-> green. **Next: Phases 14/15 — message + URL scanners (small); Phase 13 —
-> Flutter dashboard + team demo recordings; Phase 16 — trusted-voice stub.**
+> that document. **Status: 🎉 ALL 18 PHASES COMPLETE** — full prototype:
+> real AASIST-L + faster-whisper hi/mr ASR + scam rule engine + attack lookup
+> + 5-signal fusion/Risk(t) + policy + tiered liveness + scanners +
+> trusted-voice stub, served over HTTP & WebSocket, **with the Flutter
+> dashboard** (live WS risk chart, verdict, scanners, history; analyze clean,
+> web build verified). 146 backend tests green. Post-SIH research track
+> started: evaluation harness live (`evaluation/results/`), fine-tuning guide
+> (`training/README.md` — model AASIST-L; data: self-built starter →
+> IndicVoices [HF auto-gated] / IndicSynth [AI4Bharat request]).
+> **Next: A1 recordings (team) → fine-tuning milestones B–E.**
 > The roadmap, risk register and Q&A below remain valid.
 
 > Single source of truth for **what's built, what's next, and where the real
