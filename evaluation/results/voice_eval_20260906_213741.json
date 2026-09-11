@@ -1,0 +1,41 @@
+{
+  "rows": [
+    {
+      "file": "tts_hindi_normal.mp3",
+      "label": "spoof",
+      "spoof_score": 0.99,
+      "prediction": "spoof",
+      "correct": true
+    },
+    {
+      "file": "tts_hindi_scam.mp3",
+      "label": "spoof",
+      "spoof_score": 0.9998,
+      "prediction": "spoof",
+      "correct": true
+    },
+    {
+      "file": "tts_hindi_scam_long.mp3",
+      "label": "spoof",
+      "spoof_score": 0.888,
+      "prediction": "spoof",
+      "correct": true
+    },
+    {
+      "file": "tts_marathi_scam.mp3",
+      "label": "spoof",
+      "spoof_score": 1.0,
+      "prediction": "spoof",
+      "correct": true
+    }
+  ],
+  "spoof_scores": [
+    0.99,
+    0.9998,
+    0.888,
+    1.0
+  ],
+  "bonafide_scores": [],
+  "eer": null,
+  "threshold": 0.5
+}

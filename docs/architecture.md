@@ -33,17 +33,20 @@ below was designed around it, not from scratch.
 | 11 | liveness | ✅ **DONE** — tiered via `liveness_decision()` (NONE<40 / MONITOR 40–69 / CHALLENGE 70–84 / MANDATORY ≥85); fixed prototype phrase; challenge expiry (`LIVENESS_EXPIRY_SECONDS`, late responses → FAILED); states PENDING/PASSED/SUSPICIOUS/FAILED; start/verify endpoints persist outcomes |
 | — | **HTTP API wiring** (was v2 Phase 8) | ✅ **DONE** — one orchestrator (`app/pipeline.py`) shared by the terminal card AND `POST /api/analyze/audio`; `POST /api/session`, `GET /api/history`, `GET /api/session/{id}`; uploads validated (type/size), temp audio deleted after analysis (privacy_mode); every response fits the two frozen shapes; verified end-to-end with curl + real models |
 | 12 | WebSocket dynamic risk | ✅ **DONE** — `WS /ws/session/{id}`: documented protocol (start/audio/end → status + one `risk_update` per chunk + final canonical response), simulated real-time pacing (§15), CPU work in a worker thread (socket stays responsive), results persisted like HTTP; `scripts/ws_client.py` = live terminal dashboard; one `stream_analysis()` generator powers all three surfaces |
-| 13 | Flutter dashboard | ❌ not built |
-| 14 | message scanner | ❌ not built |
-| 15 | URL checker | ❌ not built |
-| 16 | trusted voice memory prototype | ❌ stub planned |
-| 17 | testing & integration | 🟡 20 tests pass, but against the old contract |
-| 18 | demo polish | 🟡 terminal demo card exists (`scripts/demo_pipeline.py`); needs new contract + 5 scenarios |
+| 13 | Flutter dashboard | ✅ **DONE** — Home (live health + service states), Call Analysis (file pick → WS stream → **live Risk(t) line chart** → full verdict incl. liveness verify flow), Message/URL scanners, Threat History, Trusted Contacts stub; dark cybersecurity theme; backend URL configurable at runtime (⚙); `flutter analyze` clean, `flutter build web` verified |
+| 14 | message scanner | ✅ **DONE** — `POST /api/analyze/message`: reuses the scam rule engine → attack types → bands → policy; no voice/identity signals so scam score IS content risk (documented); hi/mr/en text fixtures in demo_data |
+| 15 | URL checker | ✅ **DONE** — `POST /api/analyze/url`: transparent structural heuristics (IP host, @-trick, punycode, brand+login, brand-in-path, shorteners, TLDs, no-HTTPS…) with additive demo weights, every trigger reported as `[url_rule]` reasons; NO live fetching (prototype); official-domain whitelist |
+| 16 | trusted voice memory prototype | ✅ **DONE (stub)** — `POST /api/voice-profile/enroll` + `GET /api/voice-profiles`: metadata-only profiles with honest `embedding_status`; identity signal stays NULL until the embedding research track (`training/README.md`) |
+| 17 | testing & integration | ✅ 146 tests green across the whole stack (contract, audio, voice, ASR, scam, attack, risk, policy, liveness, API incl. WS, scanners, profiles) |
+| 18 | demo polish | ✅ **DONE** — README PROTOTYPE-vs-FUTURE table + current status; `docs/demo_script.md` (12-minute judge script with Q&A); architecture doc consolidates scope/privacy/ML/MLOps sections; evaluation harness + training guide |
 
-**What is REAL today:** preprocessing · AASIST-L deepfake scoring · risk-fusion
-formula · liveness challenge · graceful fallback everywhere.
-**What is DEMO-MODE today:** transcript (hi/mr script mock) · scam indicators ·
-context risk (hard 0.0) · speaker identity (no signal source yet).
+**What is REAL today:** preprocessing · AASIST-L deepfake scoring · real
+faster-whisper Hindi/Marathi ASR · scam rule engine · attack-type lookup ·
+5-signal fusion + Risk(t) timeline · policy engine · tiered liveness ·
+message/URL scanners · graceful fallback everywhere.
+**What is DEMO-MODE today:** context risk (hard 0.0 — no signal source yet) ·
+speaker identity (null until Phase 16) — only when `USE_DEMO_SERVICES=true`
+or a model fails; with models loaded the pipeline is fully real.
 
 ---
 
