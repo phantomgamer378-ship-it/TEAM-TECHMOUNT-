@@ -236,4 +236,4 @@ deliberately unsupported (needs ffmpeg) — record/convert to WAV.
   is an **uncalibrated prototype cut**.
 - **Risk fusion weights (0.30·voice + 0.20·identity + 0.30·scam + 0.10·context + 0.10·liveness):** demo weights only — signals with no evidence are excluded and weights renormalized; exposed as `weights_used` in every response. Not scientifically validated.
 - **Liveness (§9):** fixed-phrase text match; it does **not** defeat sophisticated voice cloning.
-- The PROTOTYPE-vs-FUTURE-PRODUCT table is above; the full research roadmap (fine-tuning, datasets, MLOps) is in [`training/README.md`](training/README.md) and [`docs/architecture.md`](docs/architecture.md).
+- The PROTOTYPE-vs-FUTURE-PRODUCT table is above; the full research roadmap (fine-tuning, datasets, MLOps) is in [`training/README.md`](training/README.md) and [`docs/architecture.md`](docs/architecture.md).  .
