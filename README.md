@@ -101,6 +101,22 @@ update per second over WebSocket, then renders the full verdict (voice trust,
 transcript, indicators, attack types, liveness flow, source-tagged
 explanations, recommendation).
 
+### Android (APK — built & verified on emulator)
+
+```bash
+# release APK (JDK 21 for Gradle 8.14 — set once in ~/.gradle/gradle.properties:
+#   org.gradle.java.home=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home)
+cd frontend/flutter_app && flutter build apk --release
+# → build/app/outputs/flutter-apk/app-release.apk (~51 MB universal)
+
+adb install -r build/app/outputs/flutter-apk/app-release.apk
+```
+
+Ships with `INTERNET` permission + cleartext HTTP for the LAN prototype
+backend (an HTTPS deployment must remove `usesCleartextTraffic`). On the
+emulator the app auto-addresses the host at `10.0.2.2:8000`; on a real phone
+set the Mac's LAN IP via the in-app ⚙ settings.
+
 ## PROTOTYPE vs FUTURE PRODUCT (§27)
 
 | Capability | PROTOTYPE (now) | FUTURE PRODUCT |
