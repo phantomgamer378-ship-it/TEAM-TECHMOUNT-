@@ -13,18 +13,18 @@ import 'widgets.dart';
 /// Call Analysis — the MAIN demo screen (§16): pick/upload an audio file,
 /// stream Risk(t) live over WebSocket (one update per second), then show the
 /// full canonical result. Also the liveness verify flow.
-class CallAnalysisScreen extends StatefulWidget {
-  const CallAnalysisScreen({super.key, required this.api});
+class CallAnalysisView extends StatefulWidget {
+  const CallAnalysisView({super.key, required this.api});
 
   final ApiClient api;
 
   @override
-  State<CallAnalysisScreen> createState() => _CallAnalysisScreenState();
+  State<CallAnalysisView> createState() => _CallAnalysisViewState();
 }
 
 enum _Phase { idle, uploading, streaming, verifying, done }
 
-class _CallAnalysisScreenState extends State<CallAnalysisScreen> {
+class _CallAnalysisViewState extends State<CallAnalysisView> {
   _Phase _phase = _Phase.idle;
   String _lang = 'hi';
   String _status = '';
@@ -145,74 +145,71 @@ class _CallAnalysisScreenState extends State<CallAnalysisScreen> {
   @override
   Widget build(BuildContext context) {
     final busy = _phase == _Phase.uploading || _phase == _Phase.streaming;
-    return Scaffold(
-      appBar: AppBar(title: const Text('📞 Call Analysis')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Panel(
-            title: 'Analyse a call recording',
-            trailing: DropdownButton<String>(
-              value: _lang,
-              dropdownColor: VcsTheme.card,
-              items: const [
-                DropdownMenuItem(value: 'hi', child: Text('हिंदी')),
-                DropdownMenuItem(value: 'mr', child: Text('मराठी')),
-              ],
-              onChanged: busy ? null : (v) => setState(() => _lang = v ?? 'hi'),
-            ),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text(
-                  'Pick a WAV/MP3 clip — the risk timeline streams LIVE over '
-                  'WebSocket while the file is analysed, then the full verdict '
-                  'appears. (Mic recording and WebRTC are future phases.)',
-                  style: TextStyle(color: VcsTheme.textDim, fontSize: 12)),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: busy ? null : _pickAndAnalyze,
-                  icon: busy
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.upload_file),
-                  label: Text(busy ? _status : 'Choose audio file'),
-                ),
-              ),
-            ]),
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Panel(
+          title: 'Analyse a call recording',
+          trailing: DropdownButton<String>(
+            value: _lang,
+            dropdownColor: VcsTheme.card,
+            items: const [
+              DropdownMenuItem(value: 'hi', child: Text('हिंदी')),
+              DropdownMenuItem(value: 'mr', child: Text('मराठी')),
+            ],
+            onChanged: busy ? null : (v) => setState(() => _lang = v ?? 'hi'),
           ),
-          const SizedBox(height: 14),
-          if (_liveScores.isNotEmpty || _phase == _Phase.streaming)
-            Panel(
-              title: 'Risk timeline (live)',
-              trailing: Text('${_liveScores.length} updates',
-                  style: const TextStyle(color: VcsTheme.textDim, fontSize: 12)),
-              child:
-                  RiskTimelineChart(scores: _liveScores, height: 150),
-            ),
-          const SizedBox(height: 14),
-          if (_result != null)
-            Panel(title: 'Verdict', child: AnalysisResultView(result: _result)),
-          if (_result?['liveness']?['required'] == true &&
-              _sessionId != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 14),
-              child: Panel(
-                title: 'Liveness verification',
-                child: Column(children: [
-                  const Text(
-                      'Ask the caller to say the challenge phrase, then submit '
-                      'what they said (prototype: text match).',
-                      style: TextStyle(color: VcsTheme.textDim, fontSize: 12)),
-                  const SizedBox(height: 10),
-                  _LivenessForm(onSubmit: _verifyLiveness),
-                ]),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text(
+                'Pick a WAV/MP3 clip — the risk timeline streams LIVE over '
+                'WebSocket while the file is analysed, then the full verdict '
+                'appears. (Mic recording and WebRTC are future phases.)',
+                style: TextStyle(color: VcsTheme.textDim, fontSize: 12)),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: busy ? null : _pickAndAnalyze,
+                icon: busy
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.upload_file),
+                label: Text(busy ? _status : 'Choose audio file'),
               ),
             ),
-        ],
-      ),
+          ]),
+        ),
+        const SizedBox(height: 14),
+        if (_liveScores.isNotEmpty || _phase == _Phase.streaming)
+          Panel(
+            title: 'Risk timeline (live)',
+            trailing: Text('${_liveScores.length} updates',
+                style: const TextStyle(color: VcsTheme.textDim, fontSize: 12)),
+            child:
+                RiskTimelineChart(scores: _liveScores, height: 150),
+          ),
+        const SizedBox(height: 14),
+        if (_result != null)
+          Panel(title: 'Verdict', child: AnalysisResultView(result: _result)),
+        if (_result?['liveness']?['required'] == true &&
+            _sessionId != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 14),
+            child: Panel(
+              title: 'Liveness verification',
+              child: Column(children: [
+                const Text(
+                    'Ask the caller to say the challenge phrase, then submit '
+                    'what they said (prototype: text match).',
+                    style: TextStyle(color: VcsTheme.textDim, fontSize: 12)),
+                const SizedBox(height: 10),
+                _LivenessForm(onSubmit: _verifyLiveness),
+              ]),
+            ),
+          ),
+      ],
     );
   }
 }

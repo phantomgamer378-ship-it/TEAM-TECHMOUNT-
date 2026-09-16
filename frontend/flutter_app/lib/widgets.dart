@@ -1,7 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'vcs_theme.dart';
 
-/// Panel — the standard card container (dark cybersecurity aesthetic).
+/// Panel — the standard card container (premium glassmorphic aesthetic).
 class Panel extends StatelessWidget {
   const Panel({super.key, required this.title, required this.child, this.trailing});
 
@@ -10,28 +11,34 @@ class Panel extends StatelessWidget {
   final Widget? trailing;
 
   @override
-  Widget build(BuildContext context) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: VcsTheme.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: VcsTheme.cardAlt),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(children: [
-              Expanded(
-                child: Text(title,
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w600)),
-              ),
-              ?trailing,
-            ]),
-            const SizedBox(height: 10),
-            child,
-          ],
+  Widget build(BuildContext context) => ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(children: [
+                  Expanded(
+                    child: Text(title,
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
+                  ),
+                  ?trailing,
+                ]),
+                const SizedBox(height: 12),
+                child,
+              ],
+            ),
+          ),
         ),
       );
 }
@@ -47,16 +54,23 @@ class RiskBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = VcsTheme.levelColor(level);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color),
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.2),
+            blurRadius: 12,
+            spreadRadius: 2,
+          )
+        ],
       ),
       child: Text(
         '$score / 100 — $level RISK',
         style: TextStyle(
-            color: color, fontSize: 20, fontWeight: FontWeight.w700),
+            color: color, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: 0.5),
       ),
     );
   }

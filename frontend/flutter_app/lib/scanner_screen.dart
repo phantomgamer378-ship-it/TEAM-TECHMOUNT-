@@ -6,16 +6,16 @@ import 'widgets.dart';
 
 /// Message Scanner + URL Checker (§10) — simple form + result, reusing the
 /// shared AnalysisResultView renderer.
-class ScannerScreen extends StatefulWidget {
-  const ScannerScreen({super.key, required this.api});
+class ScannerView extends StatefulWidget {
+  const ScannerView({super.key, required this.api});
 
   final ApiClient api;
 
   @override
-  State<ScannerScreen> createState() => _ScannerScreenState();
+  State<ScannerView> createState() => _ScannerViewState();
 }
 
-class _ScannerScreenState extends State<ScannerScreen> {
+class _ScannerViewState extends State<ScannerView> {
   final _controller = TextEditingController();
   bool _urlMode = false;
   bool _busy = false;
@@ -49,56 +49,53 @@ class _ScannerScreenState extends State<ScannerScreen> {
   @override
   Widget build(BuildContext context) {
     final r = _result;
-    return Scaffold(
-      appBar: AppBar(title: const Text('🔎 Scanners')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment(value: false, label: Text('Message'), icon: Icon(Icons.sms)),
-              ButtonSegment(value: true, label: Text('URL'), icon: Icon(Icons.link)),
-            ],
-            selected: {_urlMode},
-            onSelectionChanged: (s) => setState(() {
-              _urlMode = s.first;
-              _controller.clear();
-            }),
-          ),
-          const SizedBox(height: 14),
-          Panel(
-            title: _urlMode ? 'Check a URL' : 'Scan a message',
-            child: Column(children: [
-              TextField(
-                controller: _controller,
-                maxLines: _urlMode ? 1 : 4,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                    hintText: _urlMode
-                        ? 'http://192.168.4.22/sbi/kyc/verify'
-                        : 'पाठ संदेश यहाँ लिखें / paste the SMS here…'),
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        SegmentedButton<bool>(
+          segments: const [
+            ButtonSegment(value: false, label: Text('Message'), icon: Icon(Icons.sms)),
+            ButtonSegment(value: true, label: Text('URL'), icon: Icon(Icons.link)),
+          ],
+          selected: {_urlMode},
+          onSelectionChanged: (s) => setState(() {
+            _urlMode = s.first;
+            _controller.clear();
+          }),
+        ),
+        const SizedBox(height: 14),
+        Panel(
+          title: _urlMode ? 'Check a URL' : 'Scan a message',
+          child: Column(children: [
+            TextField(
+              controller: _controller,
+              maxLines: _urlMode ? 1 : 4,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                  hintText: _urlMode
+                      ? 'http://192.168.4.22/sbi/kyc/verify'
+                      : 'पाठ संदेश यहाँ लिखें / paste the SMS here…'),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _busy ? null : _submit,
+                icon: _busy
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Icon(Icons.bolt),
+                label: Text(_urlMode ? 'Check URL' : 'Scan message'),
               ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: _busy ? null : _submit,
-                  icon: _busy
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.bolt),
-                  label: Text(_urlMode ? 'Check URL' : 'Scan message'),
-                ),
-              ),
-            ]),
-          ),
-          const SizedBox(height: 14),
-          if (r != null)
-            Panel(title: 'Result', child: _ScannerResult(result: r)),
-        ],
-      ),
+            ),
+          ]),
+        ),
+        const SizedBox(height: 14),
+        if (r != null)
+          Panel(title: 'Result', child: _ScannerResult(result: r)),
+      ],
     );
   }
 }
