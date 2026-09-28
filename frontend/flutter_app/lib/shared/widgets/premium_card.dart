@@ -12,7 +12,7 @@ class PremiumCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(20),
     this.color,
     this.borderColor,
-    this.borderRadius = 20,
+    this.borderRadius = 24,
     this.onTap,
   });
 
