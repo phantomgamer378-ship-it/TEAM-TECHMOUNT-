@@ -1,4 +1,4 @@
-# 🛡️ Vanirakshak — PROTOTYPE
+# 🛡️ Vaani rakshak — PROTOTYPE
 
 > **PROTOTYPE for an internal Smart India Hackathon round — not a production
 > call-security system.** It analyses *recorded / uploaded / microphone* audio
