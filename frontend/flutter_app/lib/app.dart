@@ -1,4 +1,4 @@
-hatsimport 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/theme/vr_theme.dart';
@@ -80,17 +80,7 @@ class _MainShellState extends State<_MainShell> {
   void _buildViews() {
     _views = [
       VrHomeScreen(api: widget.api, key: UniqueKey()),
-      // Calls tab can just push the LiveCallScreen, but we'll show a placeholder here that immediately pushes it, or we can make the tab a standalone view.
-      // Better: we just keep the 5 tabs: Home, Calls, Scan, Reports, More.
-      // Calls tab:
-      Scaffold(
-        body: Center(
-          child: FilledButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => LiveCallScreen(api: widget.api))),
-            child: const Text('Start Call Protection'),
-          ),
-        ),
-      ),
+      VrCallHistoryScreen(api: widget.api, key: UniqueKey()),
       VrScannerScreen(api: widget.api, key: UniqueKey()),
       const VrReportsScreen(),
       VrProfileScreen(api: widget.api, onUrlChanged: () => setState(_buildViews), key: UniqueKey()),
@@ -106,17 +96,18 @@ class _MainShellState extends State<_MainShell> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: VrColors.surface,
+        selectedItemColor: VrColors.primary,
+        unselectedItemColor: VrColors.textMuted,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
         onTap: (index) {
-          if (index == 1) {
-            // Intercept "Calls" tab to push the hero screen directly
-            Navigator.push(context, MaterialPageRoute(builder: (_) => LiveCallScreen(api: widget.api)));
-            return;
-          }
           setState(() => _currentIndex = index);
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.dashboard_outlined), activeIcon: Icon(Icons.dashboard), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.phone_in_talk_outlined), activeIcon: Icon(Icons.phone_in_talk), label: 'Calls'),
+          BottomNavigationBarItem(icon: Icon(Icons.history_outlined), activeIcon: Icon(Icons.history), label: 'Calls'),
           BottomNavigationBarItem(icon: Icon(Icons.search_outlined), activeIcon: Icon(Icons.search), label: 'Scan'),
           BottomNavigationBarItem(icon: Icon(Icons.analytics_outlined), activeIcon: Icon(Icons.analytics), label: 'Reports'),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'More'),

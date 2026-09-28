@@ -5,6 +5,7 @@ import '../../core/utils/risk_utils.dart';
 import '../../services/api_client.dart';
 import '../../shared/widgets/premium_card.dart';
 import '../../shared/widgets/risk_badge.dart';
+import '../live_call/live_call_screen.dart';
 
 /// Timeline-style call history with large risk indicators and filters.
 class VrCallHistoryScreen extends StatefulWidget {
@@ -68,37 +69,52 @@ class _VrCallHistoryScreenState extends State<VrCallHistoryScreen> {
             return true;
           }).toList();
 
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
-            children: [
-              Text('Threat History',
-                  style: VrTypography.sectionTitle.copyWith(color: VrColors.textPrimary)),
-              const SizedBox(height: 16),
-              // Filters
-              Row(
-                children: [
-                  _FilterChip(label: 'All', active: _filter == 'all',
-                      onTap: () => setState(() => _filter = 'all')),
-                  const SizedBox(width: 8),
-                  _FilterChip(label: 'High Risk', active: _filter == 'high',
-                      onTap: () => setState(() => _filter = 'high')),
-                  const SizedBox(width: 8),
-                  _FilterChip(label: 'Safe', active: _filter == 'safe',
-                      onTap: () => setState(() => _filter = 'safe')),
+          return Scaffold(
+            backgroundColor: Colors.transparent, // Let parent handle bg, or use VrColors.bg
+            body: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 100), // extra padding for FAB
+              children: [
+                Text('Threat History',
+                    style: VrTypography.sectionTitle.copyWith(color: VrColors.textPrimary)),
+                const SizedBox(height: 16),
+                // Filters
+                Row(
+                  children: [
+                    _FilterChip(label: 'All', active: _filter == 'all',
+                        onTap: () => setState(() => _filter = 'all')),
+                    const SizedBox(width: 8),
+                    _FilterChip(label: 'High Risk', active: _filter == 'high',
+                        onTap: () => setState(() => _filter = 'high')),
+                    const SizedBox(width: 8),
+                    _FilterChip(label: 'Safe', active: _filter == 'safe',
+                        onTap: () => setState(() => _filter = 'safe')),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // History items
+                for (var i = 0; i < filtered.length; i++) ...[
+                  _HistoryCard(row: filtered[i]),
+                  if (i < filtered.length - 1) const SizedBox(height: 10),
                 ],
-              ),
-              const SizedBox(height: 16),
-              // History items
-              for (var i = 0; i < filtered.length; i++) ...[
-                _HistoryCard(row: filtered[i]),
-                if (i < filtered.length - 1) const SizedBox(height: 10),
+                const SizedBox(height: 24),
+                Center(
+                  child: Text('🔒 Audio is never stored — metadata + results only',
+                      style: VrTypography.caption.copyWith(color: VrColors.textMuted)),
+                ),
               ],
-              const SizedBox(height: 24),
-              Center(
-                child: Text('🔒 Audio is never stored — metadata + results only',
-                    style: VrTypography.caption.copyWith(color: VrColors.textMuted)),
-              ),
-            ],
+            ),
+            floatingActionButton: FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => LiveCallScreen(api: widget.api)),
+                );
+              },
+              backgroundColor: VrColors.primary,
+              foregroundColor: VrColors.bg,
+              icon: const Icon(Icons.shield),
+              label: const Text('Simulate Call', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
           );
         },
       ),
