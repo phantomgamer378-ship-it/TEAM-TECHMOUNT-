@@ -34,7 +34,7 @@ FIELDNAMES = ["clip_id", "path", "label", "speaker_id",
 def read_manifest(path: str) -> list:
     records = []
     with open(path, newline="") as f:
-        reader = csv.DictReader(f)
+        reader = csv.DictReader(f, fieldnames=FIELDNAMES)
         for row in reader:
             row["label"] = int(row["label"])
             records.append(row)
