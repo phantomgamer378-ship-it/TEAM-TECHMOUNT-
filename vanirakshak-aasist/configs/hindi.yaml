@@ -1,36 +1,50 @@
-# Hindi real-data config — Phase 11 scale-up
+# Hindi real-data fine-tuning config — VANIRAKSHAK Phase 12-15
 device: auto
 sample_rate: 16000
 num_samples: 64600
 
 training:
   batch_size: 4
-  epochs: 10
+  epochs: 15
   learning_rate: 1.0e-5
   weight_decay: 1.0e-4
   optimizer: adam
-  scheduler: cosine
-  early_stopping_patience: 3
+  early_stopping_patience: 4
   fine_tuning_mode: full
 
 augmentation:
-  enabled: false
+  enabled: true
+  gain: true
+  noise: true
+  telephone: true
+
+# splits_dir used directly by train.py → DataLoader
+splits_dir: data/splits/hindi
 
 data:
   manifest: data/manifests/hindi_manifest.csv
-  splits_dir: data/splits/hindi
   samples_dir: data/samples/hindi
   languages: [hi]
-  target_count_per_class: 500
+  target_count_per_class: 200    # start small; scale after EER gate passes
 
 datasets:
-  indic_voices:
-    hf_path: ai4bharat/indicvoices_r
-    config: hi
-    split: train
-  indic_synth:
+  bonafide:
+    hf_path: google/fleurs        # Apache-2.0, public, parquet, no gating
+    config: hi_in
+    split: "train+validation+test"
+    audio_col: audio
+    speaker_col: id
+  spoof:
     hf_path: ksmashhero/IndicSynth
     config: Hindi
     split: train
+    audio_col: audio
+    speaker_col: "Source Speaker_ID"
+    generator_col: "Generative Model"
+
+checkpoints:
+  dir: checkpoints/hindi_v1
+  save_best: true
+  save_last: true
 
 seed: 42
