@@ -1,0 +1,26 @@
+# Pilot config — pipeline validation only (synthetic data)
+device: auto
+sample_rate: 16000
+num_samples: 64600
+
+training:
+  batch_size: 4
+  epochs: 2
+  learning_rate: 1.0e-5
+  weight_decay: 1.0e-4
+  optimizer: adam
+  scheduler: cosine
+  early_stopping_patience: 2
+  fine_tuning_mode: full
+
+augmentation:
+  enabled: false
+
+data:
+  manifest: data/manifests/pilot_manifest.csv
+  splits_dir: data/splits
+  samples_dir: data/samples
+  languages: [hi, mr]
+  target_count_per_class: 20    # synthetic dummy for fast pipeline check
+
+seed: 42

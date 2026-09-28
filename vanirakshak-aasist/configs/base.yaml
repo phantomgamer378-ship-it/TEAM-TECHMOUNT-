@@ -1,0 +1,69 @@
+# VANIRAKSHAK AASIST-L — Base Configuration
+device: auto                   # auto → mps > cuda > cpu
+
+# Audio
+sample_rate: 16000
+num_samples: 64600             # ~4 sec at 16kHz — matches AASIST-L upstream config
+
+# Model
+model:
+  architecture: AASIST-L
+  checkpoint: src/upstream_aasist/models/weights/AASIST-L.pth
+  config: src/upstream_aasist/config/AASIST-L.conf
+
+# Training
+training:
+  batch_size: 4
+  epochs: 10
+  learning_rate: 1.0e-5
+  weight_decay: 1.0e-4
+  optimizer: adam
+  scheduler: cosine
+  early_stopping_patience: 3
+  fine_tuning_mode: full       # full | partial
+
+# Augmentation (disabled by default — establish baseline first)
+augmentation:
+  enabled: false
+  gain: false
+  noise: false
+  reverb: false
+  telephone: false
+  compression: false
+
+# Data
+data:
+  manifest: data/manifests/pilot_manifest.csv
+  splits_dir: data/splits
+  samples_dir: data/samples
+  languages:
+    - hi
+    - mr
+
+# Datasets (metadata only — streaming on demand)
+datasets:
+  indic_voices:
+    hf_path: ai4bharat/indicvoices_r
+    role: bonafide
+    label: 1
+    license: cc-by-4.0
+  indic_synth:
+    hf_path: ksmashhero/IndicSynth
+    role: spoof
+    label: 0
+    license: cc-by-nc-4.0
+    note: "Non-commercial research use only. Review before production deployment."
+
+# Evaluation
+eval:
+  primary_metric: eer
+  batch_size: 8
+
+# Reproducibility
+seed: 42
+
+# Checkpointing
+checkpoints:
+  dir: checkpoints
+  save_best: true
+  save_last: true

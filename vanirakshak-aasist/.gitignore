@@ -1,0 +1,52 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environment ───────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Data (never commit raw audio or large manifests) ─────────────────────────
+data/raw/
+data/processed/
+data/samples/
+data/quarantine/
+data/splits/train.csv
+data/splits/val.csv
+data/splits/test.csv
+
+# ── Model weights ─────────────────────────────────────────────────────────────
+checkpoints/
+artifacts/
+*.pth
+*.pt
+*.bin
+*.onnx
+
+# ── Logs & reports ────────────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── HuggingFace cache ─────────────────────────────────────────────────────────
+~/.cache/huggingface/
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── Jupyter ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+.env
+*.key
+*.pem
+secrets/

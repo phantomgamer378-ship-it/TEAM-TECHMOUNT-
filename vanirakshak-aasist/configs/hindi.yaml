@@ -1,0 +1,36 @@
+# Hindi real-data config — Phase 11 scale-up
+device: auto
+sample_rate: 16000
+num_samples: 64600
+
+training:
+  batch_size: 4
+  epochs: 10
+  learning_rate: 1.0e-5
+  weight_decay: 1.0e-4
+  optimizer: adam
+  scheduler: cosine
+  early_stopping_patience: 3
+  fine_tuning_mode: full
+
+augmentation:
+  enabled: false
+
+data:
+  manifest: data/manifests/hindi_manifest.csv
+  splits_dir: data/splits/hindi
+  samples_dir: data/samples/hindi
+  languages: [hi]
+  target_count_per_class: 500
+
+datasets:
+  indic_voices:
+    hf_path: ai4bharat/indicvoices_r
+    config: hi
+    split: train
+  indic_synth:
+    hf_path: ksmashhero/IndicSynth
+    config: Hindi
+    split: train
+
+seed: 42
