@@ -1,0 +1,32 @@
+{
+    "manifest": "data/manifests/hindi_manifest.csv",
+    "splits_dir": "data/splits/hindi",
+    "seed": 42,
+    "total_clips": 150,
+    "bonafide": 50,
+    "spoof": 100,
+    "train": {
+        "total": 105,
+        "bonafide": 35,
+        "spoof": 70,
+        "speakers": 31
+    },
+    "val": {
+        "total": 21,
+        "bonafide": 6,
+        "spoof": 15,
+        "speakers": 7
+    },
+    "test": {
+        "total": 24,
+        "bonafide": 9,
+        "spoof": 15,
+        "speakers": 8
+    },
+    "speaker_leakage": true,
+    "leakage_detail": {
+        "train_val": 1,
+        "train_test": 1,
+        "val_test": 1
+    }
+}

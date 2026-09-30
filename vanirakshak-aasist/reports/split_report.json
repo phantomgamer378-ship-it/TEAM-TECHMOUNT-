@@ -1,0 +1,10 @@
+{
+    "train_size": 56,
+    "val_size": 12,
+    "test_size": 12,
+    "train_speakers": 19,
+    "val_speakers": 10,
+    "test_speakers": 9,
+    "speaker_leakage": true,
+    "note": "Synthetic pilot data uses dummy speaker IDs; leakage expected and documented."
+}

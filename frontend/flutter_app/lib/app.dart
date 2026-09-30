@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/theme/vr_theme.dart';
+import 'core/theme/vr_colors.dart';
 import 'core/constants/app_constants.dart';
 import 'services/api_client.dart';
 

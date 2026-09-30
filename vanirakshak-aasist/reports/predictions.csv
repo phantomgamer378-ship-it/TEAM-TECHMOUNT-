@@ -1,0 +1,13 @@
+clip_id,true_label,predicted_label,score,language,speaker_id,generator_id,source_dataset
+iv_hi_0008,1,0,3.58163561031688e-05,hi,spk_3,none,IndicVoices_Dummy
+iv_hi_0014,1,0,0.0004755933186970651,hi,spk_4,none,IndicVoices_Dummy
+iv_hi_0015,1,0,0.0006830705679021776,hi,spk_0,none,IndicVoices_Dummy
+iv_hi_0017,1,0,7.106275006663054e-05,hi,spk_2,none,IndicVoices_Dummy
+iv_hi_0001,1,0,0.00015605926455464214,hi,spk_1,none,IndicVoices_Dummy
+iv_hi_0007,1,0,8.5424653661903e-05,hi,spk_2,none,IndicVoices_Dummy
+is_mr_0014,0,0,0.0011051258770748973,mr,spk_19,VITS,IndicSynth_Dummy
+is_mr_0009,0,0,0.0006644896930083632,mr,spk_19,VITS,IndicSynth_Dummy
+is_hi_0002,0,0,0.00010908958938671276,hi,spk_7,VITS,IndicSynth_Dummy
+is_hi_0016,0,0,0.00022584680118598044,hi,spk_6,VITS,IndicSynth_Dummy
+is_mr_0019,0,0,0.00024672469589859247,mr,spk_19,VITS,IndicSynth_Dummy
+is_mr_0002,0,0,5.110413439979311e-06,mr,spk_17,VITS,IndicSynth_Dummy
