@@ -37,7 +37,7 @@ class Settings:
     # wires the app/demo/* mocks for EVERY service — the whole pipeline runs
     # contract-valid fake data with zero models installed. Prototype/demo only;
     # health still reports each mock as demo_mode and outputs say "DEMO MODE".
-    USE_DEMO_SERVICES: bool = _bool("USE_DEMO_SERVICES", True)
+    USE_DEMO_SERVICES: bool = _bool("USE_DEMO_SERVICES", False)
 
     # Model settings
     MODEL_PATH: str = os.getenv("MODEL_PATH", "")  # override all model storage locations
