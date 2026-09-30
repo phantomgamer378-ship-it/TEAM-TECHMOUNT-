@@ -5,8 +5,8 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
-    libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
+
 
 # Install python dependencies
 COPY requirements.txt .

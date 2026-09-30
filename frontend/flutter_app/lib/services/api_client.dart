@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import '../core/constants/app_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -16,16 +17,11 @@ class ApiClient {
   /// (LAN IP for phones, 10.0.2.2 for the Android emulator, localhost for web).
   String baseUrl;
 
-  /// Sensible default per platform: web/desktop talk to localhost; the
-  /// Android emulator reaches the host machine via 10.0.2.2 (§12).
   static Future<String> loadBaseUrl() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString('baseUrl');
     if (saved != null && saved.isNotEmpty) return saved;
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:8000';
-    }
-    return 'http://127.0.0.1:8000';
+    return AppConfig.apiBaseUrl;
   }
 
   static Future<void> saveBaseUrl(String url) async {
