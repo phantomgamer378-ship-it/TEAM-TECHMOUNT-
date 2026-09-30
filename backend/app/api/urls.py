@@ -16,7 +16,7 @@ from app.models.schemas import (
 )
 from app.pipeline import analyze_url
 
-router = APIRouter(prefix="/api", tags=["urls"])
+router = APIRouter(prefix="/v1", tags=["urls"])
 
 
 @router.post("/analyze/url", response_model=URLAnalysisResponse | FallbackResponse)

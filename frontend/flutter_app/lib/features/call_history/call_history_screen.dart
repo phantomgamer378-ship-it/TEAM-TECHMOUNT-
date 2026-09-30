@@ -29,7 +29,7 @@ class _VrCallHistoryScreenState extends State<VrCallHistoryScreen> {
 
   Future<Map<String, dynamic>> _load() async {
     try {
-      final r = await widget.api.get('/api/history', {'limit': '50'});
+      final r = await widget.api.get('/v1/history', {'limit': '50'});
       return (r as Map).cast<String, dynamic>();
     } catch (_) {
       throw Exception('unreachable');

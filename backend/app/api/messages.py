@@ -16,7 +16,7 @@ from app.models.schemas import (
 )
 from app.pipeline import analyze_message
 
-router = APIRouter(prefix="/api", tags=["messages"])
+router = APIRouter(prefix="/v1", tags=["messages"])
 
 
 @router.post("/analyze/message",

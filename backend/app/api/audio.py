@@ -22,7 +22,7 @@ from app.database import database as db
 from app.models.schemas import AnalysisResponse, FallbackResponse
 from app.pipeline import analyze_audio
 
-router = APIRouter(prefix="/api", tags=["analyze"])
+router = APIRouter(prefix="/v1", tags=["analyze"])
 
 ALLOWED_SUFFIXES = {".wav", ".mp3", ".flac", ".ogg", ".aiff", ".aif"}
 

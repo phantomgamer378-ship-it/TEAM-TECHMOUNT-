@@ -28,7 +28,7 @@ def demo_client():
 
 
 def test_scam_message_scores_high(demo_client):
-    r = demo_client.post("/api/analyze/message",
+    r = demo_client.post("/v1/analyze/message",
                          json={"text": "Your bank account will be blocked today. Send the OTP immediately."})
     assert r.status_code == 200
     body = MessageAnalysisResponse(**r.json())  # contract validation
@@ -41,7 +41,7 @@ def test_scam_message_scores_high(demo_client):
 
 
 def test_normal_message_scores_low(demo_client):
-    r = demo_client.post("/api/analyze/message",
+    r = demo_client.post("/v1/analyze/message",
                          json={"text": "नमस्ते! कल की मीटिंग 11 बजे है। रिपोर्ट भेज देना।"})
     body = MessageAnalysisResponse(**r.json())
     assert body.risk.level == "LOW"
@@ -50,13 +50,13 @@ def test_normal_message_scores_low(demo_client):
 
 
 def test_empty_message_returns_fallback(demo_client):
-    r = demo_client.post("/api/analyze/message", json={"text": "   "})
+    r = demo_client.post("/v1/analyze/message", json={"text": "   "})
     body = r.json()
     assert body["status"] == "partial" and body["fallback_used"] is True
 
 
 def test_phishing_url_scores_high(demo_client):
-    r = demo_client.post("/api/analyze/url",
+    r = demo_client.post("/v1/analyze/url",
                          json={"url": "http://192.168.4.22/sbi/kyc/verify?otp=1"})
     body = URLAnalysisResponse(**r.json())
     assert body.risk.level in ("HIGH", "CRITICAL")
@@ -66,12 +66,12 @@ def test_phishing_url_scores_high(demo_client):
 
 
 def test_benign_url_scores_low(demo_client):
-    r = demo_client.post("/api/analyze/url", json={"url": "https://www.google.com/search?q=weather"})
+    r = demo_client.post("/v1/analyze/url", json={"url": "https://www.google.com/search?q=weather"})
     body = URLAnalysisResponse(**r.json())
     assert body.risk.level == "LOW"
     assert body.policy_action == "CONTINUE"
 
 
 def test_empty_url_returns_fallback(demo_client):
-    r = demo_client.post("/api/analyze/url", json={"url": "  "})
+    r = demo_client.post("/v1/analyze/url", json={"url": "  "})
     assert r.json()["fallback_used"] is True

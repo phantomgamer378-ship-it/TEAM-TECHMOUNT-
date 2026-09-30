@@ -1,4 +1,4 @@
-"""Phase 1 smoke test (§29): the app starts and /api/health answers.
+"""Phase 1 smoke test (§29): the app starts and /v1/health answers.
 
 Run from backend/:
     python -m pytest -v
@@ -11,7 +11,7 @@ from app.main import app
 def test_health_endpoint():
     # Context manager = lifespan (startup) runs, so services get load_all().
     with TestClient(app) as client:
-        resp = client.get("/api/health")
+        resp = client.get("/v1/health")
 
     assert resp.status_code == 200
     body = resp.json()
@@ -34,4 +34,4 @@ def test_root_endpoint():
         resp = client.get("/")
 
     assert resp.status_code == 200
-    assert resp.json()["health"] == "/api/health"
+    assert resp.json()["health"] == "/v1/health"

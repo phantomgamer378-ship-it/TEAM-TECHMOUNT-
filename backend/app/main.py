@@ -76,6 +76,10 @@ app.add_middleware(
 # (§19). USE_DEMO_SERVICES=true swaps in the app/demo/* mocks instead.
 app.state.services = ServiceContainer.create()
 
+from app.api.auth import router as auth_router
+from app.api.users import router as users_router
+from app.api.devices import router as devices_router
+
 app.include_router(health_router)
 app.include_router(session_router)
 app.include_router(audio_router)
@@ -84,6 +88,9 @@ app.include_router(messages_router)
 app.include_router(urls_router)
 app.include_router(voice_profiles_router)
 app.include_router(websocket_router)
+app.include_router(auth_router)
+app.include_router(users_router)
+app.include_router(devices_router)
 
 
 @app.get("/", tags=["meta"])
@@ -93,6 +100,6 @@ def root():
         "app": settings.APP_NAME,
         "version": settings.VERSION,
         "status": "PROTOTYPE",
-        "health": "/api/health",
+        "health": "/v1/health",
         "docs": "/docs",
     }

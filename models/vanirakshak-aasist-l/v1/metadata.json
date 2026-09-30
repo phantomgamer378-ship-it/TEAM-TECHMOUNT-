@@ -1,0 +1,18 @@
+{
+  "model_name": "vanirakshak-aasist-l",
+  "model_version": "v1",
+  "training_data_version": "indic-pilot-v1",
+  "training_date": "2024-09-28",
+  "languages": ["hi_in"],
+  "sample_rate": 16000,
+  "input_length": 64600,
+  "checkpoint_type": "pytorch_state_dict",
+  "evaluation_metrics": {
+    "eer": 0.2667,
+    "f1": 0.7143,
+    "precision": 1.0,
+    "recall": 0.5556
+  },
+  "git_commit": "latest",
+  "framework_version": "torch>=2.14.0"
+}

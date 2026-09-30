@@ -22,7 +22,7 @@ from app.models.schemas import (
     VoiceProfileResponse,
 )
 
-router = APIRouter(prefix="/api", tags=["voice-profiles"])
+router = APIRouter(prefix="/v1", tags=["voice-profiles"])
 
 
 @router.post("/voice-profile/enroll",

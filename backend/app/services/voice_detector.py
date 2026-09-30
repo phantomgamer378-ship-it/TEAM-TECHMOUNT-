@@ -63,58 +63,29 @@ class VoiceDetector:
     # ------------------------------------------------------------------ setup
 
     def load_model(self) -> bool:
-        """Called ONCE at startup (§19). Downloads the checkpoint if missing,
-        loads it strictly (any mismatch = failure), eval mode, then warm-up
-        forward pass so the first real request isn't slow (§24)."""
+        """Called ONCE at startup (§19). Loads the fine-tuned packaged model (Phase 2)."""
         if self.model_loaded:
             return True
-
+            
         try:
-            import torch
-            from app.ml.aasist import Model
-        except ImportError as exc:
-            log.warning("VoiceDetector: torch not installed (%s) — staying in fallback mode", exc)
-            return False
-
-        try:
-            path = Path(settings.VOICE_MODEL_PATH)
-            if not path.is_file() or path.stat().st_size < 10_000:
-                log.info("VoiceDetector: checkpoint missing at %s — downloading", path)
-                if not self._download_weights(path):
-                    log.warning("VoiceDetector: no checkpoint available — staying in fallback mode")
-                    return False
-
-            device = self._resolve_device(torch)
-            model = Model(AASIST_L_CONFIG)
-            state = torch.load(path, map_location="cpu")
-            model.load_state_dict(state, strict=True)
-            model.to(device).eval()
-
-            # Warm-up: one forward pass on silence verifies shapes + speeds up
-            # the first real request (§24: pre-warm at startup, not per-request).
-            with torch.no_grad():
-                _, logits = model(torch.zeros(1, NB_SAMPLES, device=device))
-            if logits.shape != (1, 2):
-                raise RuntimeError(f"Unexpected model output shape {tuple(logits.shape)}")
-
-            self.model, self.device, self.model_loaded = model, device, True
-            log.info("VoiceDetector: AASIST-L loaded on %s (warm-up done)", device)
+            from app.ml.aasist_detector import VoiceSpoofDetector
+            
+            # Point to the packaged Phase 2 model
+            model_dir = Path(__file__).resolve().parent.parent.parent.parent / "models" / "vanirakshak-aasist-l" / "v1"
+            if not model_dir.exists():
+                log.warning(f"VoiceDetector: Model package not found at {model_dir}. Ensure Phase 2 is complete.")
+                return False
+                
+            self.detector = VoiceSpoofDetector(str(model_dir))
+            self.detector.load()
+            
+            self.model_loaded = True
+            log.info("VoiceDetector: Fine-tuned packaged model loaded successfully via VoiceSpoofDetector.")
             return True
-        except Exception as exc:  # §20 — any load failure falls back, never crashes
+        except Exception as exc:
             log.warning("VoiceDetector: load failed (%s) — staying in fallback mode", exc)
-            self.model, self.model_loaded = None, False
+            self.model_loaded = False
             return False
-
-    def _resolve_device(self, torch) -> "torch.device":
-        """Honour settings.DEVICE, downgrading gracefully if unavailable."""
-        want = settings.DEVICE.lower()
-        if want.startswith("cuda") and not torch.cuda.is_available():
-            log.warning("DEVICE=%s requested but CUDA unavailable — using cpu", want)
-            return torch.device("cpu")
-        if want == "mps" and not (hasattr(torch.backends, "mps") and torch.backends.mps.is_available()):
-            log.warning("DEVICE=mps requested but MPS unavailable — using cpu")
-            return torch.device("cpu")
-        return torch.device(want)
 
     def _download_weights(self, dest: Path) -> bool:
         """Download the AASIST-L checkpoint (primary HF URL, then official
@@ -169,35 +140,27 @@ class VoiceDetector:
         return {"status": "partial", "error": "Voice model unavailable", "fallback_used": True}
 
     def _predict_real(self, audio) -> dict:
-        import torch
-        import torch.nn.functional as F
-
         waveform = np.asarray(audio, dtype=np.float32).reshape(-1)
         if waveform.size == 0:
             return {"status": "partial", "error": "Empty waveform", "fallback_used": True}
 
-        # Official eval protocol: keep the first ~4 s, zero-pad if shorter.
-        x = np.zeros(NB_SAMPLES, dtype=np.float32)
-        n = min(waveform.size, NB_SAMPLES)
-        x[:n] = waveform[:n]
-
-        with torch.no_grad():
-            _, logits = self.model(torch.from_numpy(x).unsqueeze(0).to(self.device))
-            probs = F.softmax(logits, dim=-1)[0]
-
-        p_bonafide = float(probs[1])                       # official eval score: higher = genuine
-        spoof_risk = round(1.0 - p_bonafide, 4)            # → 0–1 voice risk (0 = genuine)
+        # 16000 Hz is hardcoded here per audio_processor assumptions
+        result = self.detector.predict(waveform, sr=16000)
+        
+        spoof_risk = round(result["score"], 4)            # → 0–1 voice risk (0 = genuine)
+        classification = result["classification"]
+        model_version = result.get("model_version", MODEL_LABEL)
+        
         return {
             "spoof_risk": spoof_risk,
             # Identity layer has no real signal yet (Phase 16) — null, never invented.
             "speaker_mismatch_risk": None,
             "overall_voice_risk": spoof_risk,  # overall = f(spoof, identity); identity absent → spoof
             "status": "SUSPICIOUS" if spoof_risk >= SPOOF_THRESHOLD else "GENUINE",
-            "model": MODEL_LABEL,
+            "model": model_version,
             "note": (
-                f"Pretrained AASIST-L, ASVspoof2019-LA benchmark; threshold {SPOOF_THRESHOLD} "
-                "uncalibrated; pretrained baseline, not yet evaluated on Indian-language "
-                "speech (§5). PROTOTYPE."
+                f"Packaged AASIST-L ({model_version}); threshold {SPOOF_THRESHOLD} "
+                "prototype cut. Phase 3 Integrated."
             ),
         }
 

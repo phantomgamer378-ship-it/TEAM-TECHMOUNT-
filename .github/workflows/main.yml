@@ -1,0 +1,48 @@
+name: Vanirakshak CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest sqlalchemy asyncpg psycopg2-binary PyJWT
+    - name: Run Backend Pytest
+      run: |
+        cd backend
+        pytest -v
+        
+  flutter-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.0'
+        channel: 'stable'
+    - name: Install dependencies
+      run: |
+        cd frontend/flutter_app
+        flutter pub get
+    - name: Run Flutter analyzer
+      run: |
+        cd frontend/flutter_app
+        flutter analyze
+    - name: Run Flutter tests
+      run: |
+        cd frontend/flutter_app
+        flutter test

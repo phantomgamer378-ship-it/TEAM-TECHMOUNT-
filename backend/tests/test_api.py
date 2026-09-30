@@ -41,7 +41,7 @@ def demo_client():
 def _upload(client, path: Path, lang: str = "hi", **extra):
     with open(path, "rb") as fh:
         return client.post(
-            "/api/analyze/audio",
+            "/v1/analyze/audio",
             files={"file": (path.name, fh, "audio/wav")},
             data={"lang": lang, **extra},
         )
@@ -50,7 +50,7 @@ def _upload(client, path: Path, lang: str = "hi", **extra):
 # ----------------------------------------------------------------- session
 
 def test_create_session(demo_client):
-    r = demo_client.post("/api/session", json={"source": "test"})
+    r = demo_client.post("/v1/session", json={"source": "test"})
     assert r.status_code == 200
     body = r.json()
     assert body["session_id"] and body["created_at"] and body["source"] == "test"
@@ -76,7 +76,7 @@ def test_analyze_audio_canonical_shape(demo_client):
 
 def test_analyze_audio_corrupt_file_returns_fallback(demo_client):
     r = demo_client.post(
-        "/api/analyze/audio",
+        "/v1/analyze/audio",
         files={"file": ("bad.wav", io.BytesIO(b"definitely not audio"), "audio/wav")},
     )
     assert r.status_code == 200
@@ -86,7 +86,7 @@ def test_analyze_audio_corrupt_file_returns_fallback(demo_client):
 
 def test_analyze_audio_rejects_wrong_type(demo_client):
     r = demo_client.post(
-        "/api/analyze/audio",
+        "/v1/analyze/audio",
         files={"file": ("notes.txt", b"hello", "text/plain")},
     )
     body = r.json()
@@ -101,22 +101,22 @@ def test_analyze_audio_rejects_bad_lang(demo_client):
 # ------------------------------------------------------------- liveness flow
 
 def test_liveness_start_verify_flow(demo_client):
-    sid = demo_client.post("/api/session", json={"source": "liveness"}).json()["session_id"]
+    sid = demo_client.post("/v1/session", json={"source": "liveness"}).json()["session_id"]
 
-    r = demo_client.post("/api/liveness/start", json={"session_id": sid})
+    r = demo_client.post("/v1/liveness/start", json={"session_id": sid})
     assert r.status_code == 200
     started = r.json()
     assert started["status"] == "PENDING" and started["challenge"]
 
     ok = demo_client.post(
-        "/api/liveness/verify",
+        "/v1/liveness/verify",
         json={"session_id": sid, "spoken_text": started["challenge"]},
     ).json()
     assert ok["status"] == "PASSED"
 
-    demo_client.post("/api/liveness/start", json={"session_id": sid})
+    demo_client.post("/v1/liveness/start", json={"session_id": sid})
     bad = demo_client.post(
-        "/api/liveness/verify",
+        "/v1/liveness/verify",
         json={"session_id": sid, "spoken_text": "wrong phrase"},
     ).json()
     assert bad["status"] == "SUSPICIOUS"
@@ -124,7 +124,7 @@ def test_liveness_start_verify_flow(demo_client):
 
 def test_liveness_verify_without_start_fails_closed(demo_client):
     body = demo_client.post(
-        "/api/liveness/verify", json={"session_id": "never-started", "spoken_text": "x"}
+        "/v1/liveness/verify", json={"session_id": "never-started", "spoken_text": "x"}
     ).json()
     assert body["status"] == "FAILED"
 
@@ -135,15 +135,15 @@ def test_analyze_then_history_and_session(demo_client):
     analyze = _upload(demo_client, DEMO_AUDIO).json()
     sid = analyze["session_id"]
 
-    history = demo_client.get("/api/history?limit=5").json()
+    history = demo_client.get("/v1/history?limit=5").json()
     assert history["count"] >= 1
     assert any(item["session_id"] == sid for item in history["history"])
 
-    sess = demo_client.get(f"/api/session/{sid}").json()
+    sess = demo_client.get(f"/v1/session/{sid}").json()
     assert sess["session"]["id"] == sid
     assert len(sess["analysis_results"]) >= 1
 
-    missing = demo_client.get("/api/session/does-not-exist").json()
+    missing = demo_client.get("/v1/session/does-not-exist").json()
     assert missing["status"] == "partial" and missing["fallback_used"] is True
 
 
@@ -181,7 +181,7 @@ def test_ws_stream_sends_one_update_per_chunk_then_final(demo_client):
            [u["risk_score"] for u in updates]                # identical points
 
     # persisted like the HTTP route
-    hist = demo_client.get("/api/history?limit=50").json()
+    hist = demo_client.get("/v1/history?limit=50").json()
     assert any(item["session_id"] == sid for item in hist["history"])
 
 

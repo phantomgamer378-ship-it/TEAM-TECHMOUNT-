@@ -17,7 +17,7 @@ from app.models.schemas import (
     SessionResponse,
 )
 
-router = APIRouter(prefix="/api", tags=["session"])
+router = APIRouter(prefix="/v1", tags=["session"])
 
 
 @router.post("/session", response_model=SessionResponse)

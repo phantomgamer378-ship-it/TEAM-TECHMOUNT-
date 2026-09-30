@@ -30,7 +30,7 @@ class _VrHomeScreenState extends State<VrHomeScreen> {
 
   Future<void> _checkHealth() async {
     try {
-      await widget.api.get('/api/health');
+      await widget.api.get('/v1/health');
       if (mounted) setState(() { _backendOnline = true; _loading = false; });
     } catch (_) {
       if (mounted) setState(() { _backendOnline = false; _loading = false; });

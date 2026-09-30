@@ -34,7 +34,7 @@ class _MessageScannerScreenState extends State<MessageScannerScreen> {
     if (text.isEmpty) return;
     setState(() => _busy = true);
     try {
-      final r = await widget.api.post('/api/analyze/message', {'text': text});
+      final r = await widget.api.post('/v1/analyze/message', {'text': text});
       if (mounted) setState(() => _result = r as Map<String, dynamic>);
     } finally {
       if (mounted) setState(() => _busy = false);

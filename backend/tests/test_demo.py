@@ -88,7 +88,7 @@ def test_demo_speaker_verifier_is_an_honest_stub():
 # --------------------------------------------- full pipeline assembled on mocks
 
 def _run_mock_pipeline() -> AnalysisResponse:
-    """Exactly the call sequence the future /api/analyze/audio route will use —
+    """Exactly the call sequence the future /v1/analyze/audio route will use —
     with every intelligence service mocked (USE_DEMO_SERVICES mode)."""
     vd = DemoVoiceDetector()
     asr = DemoASRService()

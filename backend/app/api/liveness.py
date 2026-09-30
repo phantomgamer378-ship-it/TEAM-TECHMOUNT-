@@ -22,7 +22,7 @@ from app.models.schemas import (
 )
 from app.risk.policy_engine import liveness_decision
 
-router = APIRouter(prefix="/api/liveness", tags=["liveness"])
+router = APIRouter(prefix="/v1/liveness", tags=["liveness"])
 
 
 @router.post("/start", response_model=LivenessStartResponse)

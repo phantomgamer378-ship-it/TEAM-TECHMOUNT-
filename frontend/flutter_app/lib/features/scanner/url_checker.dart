@@ -33,7 +33,7 @@ class _UrlCheckerScreenState extends State<UrlCheckerScreen> {
     if (url.isEmpty) return;
     setState(() => _busy = true);
     try {
-      final r = await widget.api.post('/api/analyze/url', {'url': url});
+      final r = await widget.api.post('/v1/analyze/url', {'url': url});
       if (mounted) setState(() => _result = r as Map<String, dynamic>);
     } finally {
       if (mounted) setState(() => _busy = false);

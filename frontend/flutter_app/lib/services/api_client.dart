@@ -62,7 +62,7 @@ class ApiClient {
     String lang = 'hi',
     String? sessionId,
   }) async {
-    final req = http.MultipartRequest('POST', _uri('/api/analyze/audio'))
+    final req = http.MultipartRequest('POST', _uri('/v1/analyze/audio'))
       ..fields['lang'] = lang
       ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
     if (sessionId != null && sessionId.trim().isNotEmpty) {

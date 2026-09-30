@@ -10,7 +10,7 @@ from app.config import settings
 from app.database import database as db
 from app.models.schemas import HealthResponse
 
-router = APIRouter(prefix="/api", tags=["health"])
+router = APIRouter(prefix="/v1", tags=["health"])
 
 
 @router.get("/health", response_model=HealthResponse)

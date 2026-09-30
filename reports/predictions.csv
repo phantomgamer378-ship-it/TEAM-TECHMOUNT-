@@ -1,0 +1,6 @@
+clip_id,language,speaker,generator,duration,score,prediction,ground_truth
+sample_1,hi_in,unknown,IndicSynth,4.0,0.85,1,1
+sample_2,hi_in,unknown,IndicSynth,4.0,0.40,0,1
+sample_3,hi_in,unknown,human,4.0,0.12,0,0
+sample_4,hi_in,unknown,IndicSynth,4.0,0.92,1,1
+sample_5,hi_in,unknown,human,4.0,0.05,0,0
