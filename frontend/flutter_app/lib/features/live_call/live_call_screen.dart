@@ -8,7 +8,6 @@ import '../../core/theme/vr_typography.dart';
 import '../../core/utils/risk_utils.dart';
 import '../../services/api_client.dart';
 import '../../services/mock_analysis_service.dart';
-import '../../services/analysis_service.dart';
 import '../../shared/widgets/premium_card.dart';
 import '../../shared/widgets/shared_widgets.dart';
 import 'widgets/waveform_painter.dart';
@@ -103,7 +102,7 @@ class _LiveCallScreenState extends State<LiveCallScreen> {
   }
 
   Future<void> _uploadFile() async {
-    final files = await FilePickerPlatform.instance.pickFiles(
+    final files = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['wav', 'mp3', 'flac', 'ogg']);
     if (files.isEmpty) return;
@@ -180,10 +179,11 @@ class _LiveCallScreenState extends State<LiveCallScreen> {
   }
 
   String _mapStage(String msg) {
-    if (msg.contains('listen')) return 'listening';
-    if (msg.contains('transcript') || msg.contains('ASR')) return 'understanding';
-    if (msg.contains('voice') || msg.contains('spoof')) return 'checking_voice';
-    if (msg.contains('scam') || msg.contains('intent')) return 'checking_intent';
+    final lower = msg.toLowerCase();
+    if (lower.contains('preprocess') || lower.contains('listen')) return 'listening';
+    if (lower.contains('transcript') || lower.contains('asr')) return 'understanding';
+    if (lower.contains('voice') || lower.contains('spoof')) return 'checking_voice';
+    if (lower.contains('scam') || lower.contains('intent') || lower.contains('attack')) return 'checking_intent';
     return 'calculating';
   }
 
@@ -398,6 +398,27 @@ class _LiveCallScreenState extends State<LiveCallScreen> {
             ),
           ),
           const SizedBox(height: 16),
+        ],
+
+        // Analyzing — cancel / end call button
+        if (_phase == _CallPhase.analyzing) ...[
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: VrColors.critical,
+              side: BorderSide(color: VrColors.critical.withValues(alpha: 0.5)),
+            ),
+            onPressed: () {
+              _mockService?.dispose();
+              for (final s in _subs) {
+                s.cancel();
+              }
+              _subs.clear();
+              setState(() => _phase = _CallPhase.idle);
+            },
+            icon: const Icon(Icons.call_end),
+            label: const Text('End Call'),
+          ),
         ],
 
         // Done — view full result
