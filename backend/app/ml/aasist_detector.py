@@ -6,11 +6,7 @@ import librosa
 import numpy as np
 from pathlib import Path
 
-# Absolute import if needed, or assume sys.path is handled in main.py
-import sys
-# We temporarily add the upstream repo so Model can be imported
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'vanirakshak-aasist', 'src', 'upstream_aasist')))
-from models.AASIST import Model
+from app.ml.aasist import Model
 
 class VoiceSpoofDetector:
     def __init__(self, model_dir: str):
@@ -41,9 +37,9 @@ class VoiceSpoofDetector:
             "architecture": "AASIST",
             "nb_samp": 64600,
             "first_conv": 128,
-            "filts": [70, [1, 32], [32, 32], [32, 64], [64, 64]],
-            "gat_dims": [64, 32],
-            "pool_ratios": [0.5, 0.7, 0.5, 0.5],
+            "filts": [70, [1, 32], [32, 32], [32, 24], [24, 24]],
+            "gat_dims": [24, 32],
+            "pool_ratios": [0.4, 0.5, 0.7, 0.5],
             "temperatures": [2.0, 2.0, 100.0, 100.0]
         }
         

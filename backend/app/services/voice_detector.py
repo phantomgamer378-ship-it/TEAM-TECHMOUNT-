@@ -71,7 +71,10 @@ class VoiceDetector:
             from app.ml.aasist_detector import VoiceSpoofDetector
             
             # Point to the packaged Phase 2 model
-            model_dir = Path(__file__).resolve().parent.parent.parent.parent / "models" / "vanirakshak-aasist-l" / "v1"
+            root_dir = Path(__file__).resolve().parent.parent.parent.parent
+            model_dir = root_dir / "ai_engine" / "models" / "vanirakshak-aasist-l" / "v1"
+            if not model_dir.exists():
+                model_dir = root_dir / "models" / "vanirakshak-aasist-l" / "v1"
             if not model_dir.exists():
                 log.warning(f"VoiceDetector: Model package not found at {model_dir}. Ensure Phase 2 is complete.")
                 return False
