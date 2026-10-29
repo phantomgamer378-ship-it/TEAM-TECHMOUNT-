@@ -81,8 +81,10 @@ class MockAnalysisService extends AnalysisService {
     ];
 
     int i = 0;
+    int elapsedMs = 0;
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      elapsedMs += 500;
       if (i >= stages.length) {
         timer.cancel();
         // Emit final result.
@@ -94,8 +96,7 @@ class MockAnalysisService extends AnalysisService {
       }
 
       final stage = stages[i];
-      final elapsed = Duration(milliseconds: 500 * (i + 1));
-      if (elapsed >= stage.delay) {
+      if (elapsedMs >= stage.delay.inMilliseconds) {
         if (stage.status != null) _statusController.add(stage.status!);
         if (stage.risk != null) _riskController.add(stage.risk!);
         i++;

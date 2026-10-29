@@ -21,7 +21,9 @@ class AnalysisSteps extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentIdx = _stages.indexWhere((s) => s.$1 == currentStage);
+    final currentIdx = currentStage == 'done'
+        ? _stages.length
+        : _stages.indexWhere((s) => s.$1 == currentStage);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
