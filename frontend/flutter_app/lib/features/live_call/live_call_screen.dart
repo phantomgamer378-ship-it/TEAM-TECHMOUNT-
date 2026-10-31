@@ -79,11 +79,11 @@ class _LiveCallScreenState extends State<LiveCallScreen> {
       }
 
       final dir = await getTemporaryDirectory();
-      final path = '${dir.path}/live_call_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      final path = '${dir.path}/live_call_${DateTime.now().millisecondsSinceEpoch}.wav';
       _recordingPath = path;
 
       await _audioRecorder.start(
-        const RecordConfig(encoder: AudioEncoder.aacLc, sampleRate: 16000),
+        const RecordConfig(encoder: AudioEncoder.wav, sampleRate: 16000),
         path: path,
       );
 
@@ -136,7 +136,7 @@ class _LiveCallScreenState extends State<LiveCallScreen> {
         return;
       }
 
-      await _analyzeAudioBytes(bytes, 'live_recording.m4a', 'm4a');
+      await _analyzeAudioBytes(bytes, 'live_recording.wav', 'wav');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
