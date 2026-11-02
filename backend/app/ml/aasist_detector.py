@@ -75,7 +75,10 @@ class VoiceSpoofDetector:
             _, out = self.model(x)
             probs = torch.softmax(out, dim=1).cpu().numpy()[0]
             
-        score = float(probs[1]) # Class 1 is SPOOF
+        # In ASVspoof / AASIST training:
+        # label 1 = "bonafide" (genuine human) -> probs[1]
+        # label 0 = "spoof" (AI / clone / synthetic) -> probs[0]
+        score = float(probs[0]) # Class 0 is SPOOF
         classification = "SPOOF" if score > 0.5 else "BONAFIDE"
         
         return {
