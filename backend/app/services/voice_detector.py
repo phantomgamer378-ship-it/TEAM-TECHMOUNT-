@@ -161,10 +161,13 @@ class VoiceDetector:
             "speaker_mismatch_risk": None,
             "overall_voice_risk": spoof_risk,  # overall = f(spoof, identity); identity absent → spoof
             "status": "SUSPICIOUS" if spoof_risk >= SPOOF_THRESHOLD else "GENUINE",
-            "model": model_version,
+            # §5 honesty rule: the not-evaluated-on-Indian-languages disclaimer
+            # travels WITH the model label — never stripped from the output.
+            "model": f"{model_version} — pretrained, not yet evaluated on Hindi/Marathi speech",
             "note": (
                 f"Packaged AASIST-L ({model_version}); threshold {SPOOF_THRESHOLD} "
-                "prototype cut. Phase 3 Integrated."
+                "prototype cut. Domain-calibrated multi-window scoring "
+                "(prototype calibration, not scientifically validated)."
             ),
         }
 

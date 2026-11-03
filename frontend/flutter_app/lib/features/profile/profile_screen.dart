@@ -119,7 +119,7 @@ class _VrProfileScreenState extends State<VrProfileScreen> {
               trailing: Switch(
                 value: true,
                 onChanged: (v) {},
-                activeColor: VrColors.primary,
+                activeThumbColor: VrColors.primary,
               ),
             ),
             _SettingsItem(

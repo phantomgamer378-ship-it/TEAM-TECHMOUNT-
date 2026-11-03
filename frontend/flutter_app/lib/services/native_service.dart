@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class NativeService {
@@ -7,7 +8,7 @@ class NativeService {
     try {
       await _channel.invokeMethod('startBackgroundService');
     } on PlatformException catch (e) {
-      print("Failed to start background service: '${e.message}'.");
+      debugPrint("Failed to start background service: '${e.message}'.");
     }
   }
 
@@ -16,7 +17,7 @@ class NativeService {
       final bool result = await _channel.invokeMethod('checkOverlayPermission');
       return result;
     } on PlatformException catch (e) {
-      print("Failed to check overlay permission: '${e.message}'.");
+      debugPrint("Failed to check overlay permission: '${e.message}'.");
       return false;
     }
   }
@@ -26,7 +27,7 @@ class NativeService {
       final String result = await _channel.invokeMethod('getTelephonyState');
       return result;
     } on PlatformException catch (e) {
-      print("Failed to get telephony state: '${e.message}'.");
+      debugPrint("Failed to get telephony state: '${e.message}'.");
       return "UNKNOWN";
     }
   }

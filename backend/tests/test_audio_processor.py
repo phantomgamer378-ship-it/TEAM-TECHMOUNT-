@@ -101,13 +101,26 @@ def test_corrupt_file_returns_fallback(processor, tmp_path):
 
 
 def test_unsupported_extension_returns_fallback(processor, tmp_path):
+    bogus = tmp_path / "voice.xyz"
+    bogus.write_bytes(b"\x00" * 100)
+
+    result = processor.preprocess(bogus)
+
+    assert result["fallback_used"] is True
+    assert "Unsupported audio type" in result["error"]
+
+
+def test_garbage_m4a_falls_back_gracefully(processor, tmp_path):
+    """m4a IS supported since commit 3cb9972 (librosa fallback) — but garbage
+    bytes with an m4a extension must still degrade gracefully, not crash."""
     m4a = tmp_path / "voice.m4a"
     m4a.write_bytes(b"\x00" * 100)
 
     result = processor.preprocess(m4a)
 
     assert result["fallback_used"] is True
-    assert "Unsupported audio type" in result["error"]
+    assert result["status"] == "partial"
+    assert result["error"]  # non-empty, informative message
 
 
 def test_oversized_file_returns_fallback(processor, tmp_path, monkeypatch):

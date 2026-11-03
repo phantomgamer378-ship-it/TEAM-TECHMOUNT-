@@ -3,7 +3,6 @@ import '../../core/theme/vr_colors.dart';
 import '../../core/theme/vr_typography.dart';
 import '../../core/utils/risk_utils.dart';
 import '../../services/api_client.dart';
-import '../../shared/widgets/premium_card.dart';
 import '../../shared/widgets/risk_badge.dart';
 import '../live_call/live_call_screen.dart';
 

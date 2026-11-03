@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/vr_colors.dart';
 import '../../core/theme/vr_typography.dart';
 import '../../core/utils/risk_utils.dart';
 

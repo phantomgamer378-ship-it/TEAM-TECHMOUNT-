@@ -106,7 +106,7 @@ class AudioProcessor:
             }
         except Exception as exc:  # §20 — corrupt/invalid audio must not crash us
             log.warning("Audio preprocessing failed for %s: %s", audio_path, exc)
-            return self._fallback(f"Audio processing failed: {exc}")
+            return self._fallback(f"Audio processing failed: {type(exc).__name__}: {exc}")
 
     def to_mono(self, data: "np.ndarray") -> "np.ndarray":
         """(n_samples, n_channels) → (n_samples,). Multi-channel is averaged."""
