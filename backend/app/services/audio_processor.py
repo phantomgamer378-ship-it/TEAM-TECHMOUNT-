@@ -36,8 +36,7 @@ except ImportError:  # pragma: no cover - only hit on a broken environment
 
 TARGET_SR = 16000        # shared by AASIST + IndicConformer (§14)
 MIN_DURATION_S = 0.5     # below this, analysis is meaningless
-SUPPORTED_SUFFIXES = {".wav", ".flac", ".ogg", ".mp3", ".aiff", ".aif"}
-# NOTE: .m4a is NOT included — it needs ffmpeg. Tell users to convert to WAV.
+SUPPORTED_SUFFIXES = {".wav", ".flac", ".ogg", ".mp3", ".aiff", ".aif", ".m4a", ".aac"}
 
 
 class AudioProcessor:
@@ -66,7 +65,14 @@ class AudioProcessor:
                 return path
 
             # 1. LOAD (native sample rate; always_2d keeps channel handling uniform)
-            data, source_sr = sf.read(path, dtype="float32", always_2d=True)
+            try:
+                data, source_sr = sf.read(path, dtype="float32", always_2d=True)
+            except Exception:
+                y, source_sr = librosa.load(path, sr=None, mono=False)
+                if y.ndim == 1:
+                    data = y[:, np.newaxis]
+                else:
+                    data = y.T
 
             if data.size == 0:
                 return self._fallback("Audio file contains no samples")

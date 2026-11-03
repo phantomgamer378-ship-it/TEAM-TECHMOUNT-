@@ -24,7 +24,7 @@ from app.pipeline import analyze_audio
 
 router = APIRouter(prefix="/v1", tags=["analyze"])
 
-ALLOWED_SUFFIXES = {".wav", ".mp3", ".flac", ".ogg", ".aiff", ".aif"}
+ALLOWED_SUFFIXES = {".wav", ".mp3", ".flac", ".ogg", ".aiff", ".aif", ".m4a", ".aac"}
 
 
 def _fallback(error: str) -> FallbackResponse:

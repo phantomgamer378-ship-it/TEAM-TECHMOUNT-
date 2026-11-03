@@ -196,7 +196,13 @@ class _LiveCallScreenState extends State<LiveCallScreen> {
             await channel.sink.close();
             return;
           case 'error':
-            setState(() => _phase = _CallPhase.done);
+            final errStr = msg['error']?.toString() ?? 'Analysis error';
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Analysis failed: $errStr')),
+              );
+              setState(() => _phase = _CallPhase.idle);
+            }
             await channel.sink.close();
             return;
         }
