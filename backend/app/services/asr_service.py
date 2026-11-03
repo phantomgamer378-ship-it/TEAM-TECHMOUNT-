@@ -175,10 +175,17 @@ class ASRService:
             #                         speech) and starves hallucination loops
             #  * condition_on_previous_text=False → cuts the classic repeat-
             #                         forever failure mode on noisy audio
+            #  * temperature=0.0    → one decode pass. Default behaviour
+            #                         retries up to 5 passes when quality
+            #                         thresholds trip (observed live: an 11 s
+            #                         noisy phone clip ground 90+ s at 120%
+            #                         CPU); capping the schedule makes
+            #                         worst-case = a single pass.
             segments_iter, info = self.model.transcribe(
                 waveform, language=lang, beam_size=1,
                 vad_filter=True,
                 condition_on_previous_text=False,
+                temperature=0.0,
             )
             segments, texts = [], []
             for seg in segments_iter:  # generator — consumes real inference
