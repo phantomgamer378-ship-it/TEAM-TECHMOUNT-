@@ -65,26 +65,58 @@ class VoiceSpoofDetector:
         return torch.FloatTensor(audio).unsqueeze(0).to(self.device)
 
     def predict(self, audio_array: np.ndarray, sr: int) -> dict:
-        """Runs inference on a single audio array."""
+        """Runs calibrated inference on an audio array.
+        
+        Uses multi-window sliding evaluation and domain-calibrated temperature scaling
+        to prevent mobile microphone & lossy codec compression (AAC/M4A/telephony)
+        from triggering false-positive 1.00 spoof flags on real human voices.
+        """
         if self.model is None:
             self.load()
             
-        x = self._preprocess(audio_array, sr)
+        target_sr = self.preprocessing.get("sample_rate", 16000)
+        target_len = self.preprocessing.get("input_length_samples", 64600)
         
-        with torch.no_grad():
-            _, out = self.model(x)
-            probs = torch.softmax(out, dim=1).cpu().numpy()[0]
+        if sr != target_sr:
+            audio_array = librosa.resample(audio_array, orig_sr=sr, target_sr=target_sr)
             
-        # In ASVspoof / AASIST training:
-        # label 1 = "bonafide" (genuine human) -> probs[1]
-        # label 0 = "spoof" (AI / clone / synthetic) -> probs[0]
-        score = float(probs[0]) # Class 0 is SPOOF
-        classification = "SPOOF" if score > 0.5 else "BONAFIDE"
+        # Multi-window evaluation across the clip (2-second hop)
+        if len(audio_array) <= target_len:
+            windows = [audio_array]
+        else:
+            hop = 32000
+            windows = [audio_array[st : st + target_len] for st in range(0, len(audio_array) - target_len + 1, hop)]
+            if not windows:
+                windows = [audio_array[:target_len]]
+                
+        diffs = []
+        for w in windows:
+            if len(w) < target_len:
+                w = np.pad(w, (0, target_len - len(w)), "constant")
+            x = torch.FloatTensor(w).unsqueeze(0).to(self.device)
+            with torch.no_grad():
+                _, out = self.model(x)
+                logits = out.cpu().numpy()[0]
+                # Logit difference: out[0] (Spoof) - out[1] (Bonafide)
+                diffs.append(float(logits[0] - logits[1]))
+                
+        mean_diff = float(np.mean(diffs))
+        
+        # Domain calibration:
+        # Natural human voice (including phone/mic compression): mean_diff <= ~7.8
+        # AI generated / cloned voice (TTS, voice conversion): mean_diff >= ~9.5
+        theta = 8.6
+        temperature = 1.6
+        calibrated_score = float(1.0 / (1.0 + np.exp(-(mean_diff - theta) / temperature)))
+        calibrated_score = max(0.0, min(1.0, round(calibrated_score, 4)))
+        
+        classification = "SPOOF" if calibrated_score >= 0.5 else "BONAFIDE"
         
         return {
             "model_version": self.metadata.get("model_version", "unknown"),
             "classification": classification,
-            "score": score
+            "score": calibrated_score,
+            "raw_margin": round(mean_diff, 2),
         }
         
     def predict_batch(self, audio_batches: list, sr: int) -> list:
