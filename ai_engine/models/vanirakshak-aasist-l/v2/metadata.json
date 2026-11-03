@@ -1,0 +1,50 @@
+{
+  "model_name": "vanirakshak-aasist-l",
+  "model_version": "v2",
+  "training_data_version": "hindi-real-pilot-v1",
+  "training_date": "2026-11-03",
+  "base_model": "AASIST-L pretrained (ASVspoof2019-LA, clovaai/aasist)",
+  "training_data": {
+    "bonafide": {
+      "dataset": "google/fleurs",
+      "config": "hi_in",
+      "clips": 200,
+      "license": "Apache-2.0",
+      "note": "real genuine Hindi speech"
+    },
+    "spoof": {
+      "dataset": "ksmashhero/IndicSynth",
+      "config": "Hindi",
+      "clips": 100,
+      "generator": "freevc24 (voice conversion)",
+      "note": "real synthetic speech; SINGLE generator + single source speaker — unseen-generator performance NOT yet measured"
+    }
+  },
+  "languages": ["hi"],
+  "sample_rate": 16000,
+  "input_length": 64600,
+  "checkpoint_type": "pytorch_state_dict",
+  "evaluation_metrics": {
+    "test_eer": 0.1379,
+    "test_f1": 0.766,
+    "test_precision": 1.0,
+    "test_recall": 0.6207,
+    "baseline_pretrained_eer_same_test_set": 0.6667,
+    "eval_set_size": 44,
+    "note": "PILOT metrics on a small real-data eval set (44 clips). Acceptance gate <0.15 EER met. Single-generator training means these numbers do NOT generalize to unseen TTS/VC systems."
+  },
+  "calibration": {
+    "method": "logit-margin sigmoid, theta/temperature fit on validation split (see ai_engine/vanirakshak-aasist/reports/calibration.json)",
+    "theta": 3.6136,
+    "temperature": 5.0128,
+    "calibrated_test_accuracy_at_0.5": 0.7727
+  },
+  "known_limitations": [
+    "single generator (freevc24) in training — unseen-generator EER unmeasured",
+    "fake-side speaker-disjoint split impossible (all fakes share one source speaker)",
+    "44-clip test set — wide confidence intervals; pilot-scale",
+    "Marathi not yet included (fleurs mr_in + IndicSynth Marathi shards pending)"
+  ],
+  "git_commit": "post-training",
+  "framework_version": "torch>=2.14.0"
+}

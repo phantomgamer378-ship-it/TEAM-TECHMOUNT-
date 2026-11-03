@@ -32,12 +32,24 @@ FIELDNAMES = ["clip_id", "path", "label", "speaker_id",
 
 
 def read_manifest(path: str) -> list:
+    """Read a manifest CSV, header or no header.
+
+    With fieldnames supplied, csv.DictReader maps the header row itself onto
+    FIELDNAMES and int('label') then crashes. Detect a header and skip it;
+    read headerless files positionally as before.
+    """
     records = []
     with open(path, newline="") as f:
-        reader = csv.DictReader(f, fieldnames=FIELDNAMES)
-        for row in reader:
-            row["label"] = int(row["label"])
-            records.append(row)
+        reader = csv.reader(f)
+        rows = list(reader)
+    if rows and rows[0] and rows[0][0] == "clip_id":
+        rows = rows[1:]
+    for r in rows:
+        if len(r) < len(FIELDNAMES):
+            continue  # skip malformed/partial rows
+        row = dict(zip(FIELDNAMES, r))
+        row["label"] = int(row["label"])
+        records.append(row)
     return records
 
 

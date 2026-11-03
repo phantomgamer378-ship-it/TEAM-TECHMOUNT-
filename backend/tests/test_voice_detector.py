@@ -56,7 +56,11 @@ def test_predict_output_contract(detector):
     assert out["speaker_mismatch_risk"] is None  # no identity signal yet
     assert out["status"] in ("GENUINE", "SUSPICIOUS")
     assert out["status"] == ("SUSPICIOUS" if out["spoof_risk"] >= SPOOF_THRESHOLD else "GENUINE")
-    assert "Hindi/Marathi" in out["model"]  # the §5 disclaimer lives in the label
+    # Honesty contract: the label states the model's REAL coverage — fine-tuned
+    # Hindi pilot; Marathi + unseen generators still not covered.
+    assert "fine-tuned" in out["model"]
+    assert "Hindi" in out["model"]
+    assert "not yet covered" in out["model"]
     assert "aasist" in out["model"].lower()
 
 

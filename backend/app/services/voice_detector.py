@@ -70,14 +70,20 @@ class VoiceDetector:
         try:
             from app.ml.aasist_detector import VoiceSpoofDetector
             
-            # Point to the packaged Phase 2 model
+            # Point to the packaged fine-tuned model — highest version wins.
             root_dir = Path(__file__).resolve().parent.parent.parent.parent
-            model_dir = root_dir / "ai_engine" / "models" / "vanirakshak-aasist-l" / "v1"
-            if not model_dir.exists():
-                model_dir = root_dir / "models" / "vanirakshak-aasist-l" / "v1"
-            if not model_dir.exists():
-                log.warning(f"VoiceDetector: Model package not found at {model_dir}. Ensure Phase 2 is complete.")
+            pkg_base = root_dir / "ai_engine" / "models" / "vanirakshak-aasist-l"
+            if not pkg_base.exists():
+                pkg_base = root_dir / "models" / "vanirakshak-aasist-l"
+            versions = sorted(
+                (int(d.name[1:]) for d in pkg_base.glob("v*") if d.name[1:].isdigit()),
+                reverse=True,
+            ) if pkg_base.exists() else []
+            if not versions:
+                log.warning(f"VoiceDetector: Model package not found under {pkg_base}. Ensure fine-tuning packaging is complete.")
                 return False
+            model_dir = pkg_base / f"v{versions[0]}"
+            log.info(f"VoiceDetector: using packaged model version v{versions[0]} ({model_dir})")
                 
             self.detector = VoiceSpoofDetector(str(model_dir))
             self.detector.load()
@@ -161,13 +167,19 @@ class VoiceDetector:
             "speaker_mismatch_risk": None,
             "overall_voice_risk": spoof_risk,  # overall = f(spoof, identity); identity absent → spoof
             "status": "SUSPICIOUS" if spoof_risk >= SPOOF_THRESHOLD else "GENUINE",
-            # §5 honesty rule: the not-evaluated-on-Indian-languages disclaimer
-            # travels WITH the model label — never stripped from the output.
-            "model": f"{model_version} — pretrained, not yet evaluated on Hindi/Marathi speech",
+            # Honesty label must always state the model's REAL coverage:
+            # fine-tuned on a Hindi pilot (300 real clips, single generator);
+            # Marathi and unseen generators are NOT covered yet.
+            "model": (
+                f"{model_version} — fine-tuned on Hindi pilot (FLEURS genuine + "
+                "IndicSynth freevc24, 300 clips, EER 13.8% on 44-clip test); "
+                "Marathi + unseen generators not yet covered"
+            ),
             "note": (
-                f"Packaged AASIST-L ({model_version}); threshold {SPOOF_THRESHOLD} "
-                "prototype cut. Domain-calibrated multi-window scoring "
-                "(prototype calibration, not scientifically validated)."
+                f"Domain-calibrated multi-window scoring; calibration fit on "
+                f"validation data (reports/calibration.json), threshold "
+                f"{SPOOF_THRESHOLD} prototype cut. Pilot-scale — not validated "
+                f"on unseen generators or real telephony audio."
             ),
         }
 

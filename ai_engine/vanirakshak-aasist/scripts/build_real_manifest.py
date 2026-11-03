@@ -260,12 +260,23 @@ def main():
     header = ["clip_id", "path", "label", "speaker_id", "language", "generator_id", "source_dataset"]
 
     if os.path.exists(manifest_path) and not args.force:
+        # Header-robust resume: an interrupted earlier run can leave the
+        # manifest without its header (append mode + crash), which made
+        # csv.DictReader treat the first data row as the header and crash
+        # with KeyError('clip_id'). Read positionally instead.
         with open(manifest_path, newline="") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                existing_ids.add(row["clip_id"])
-                existing_rows.append(row)
-        print(f"  Resuming: {len(existing_ids)} clips already in manifest.")
+            rows = list(csv.reader(f))
+        if rows and rows[0] and rows[0][0] == "clip_id":
+            rows = rows[1:]  # real header — skip it
+        for r in rows:
+            if len(r) < len(header):
+                continue  # skip malformed/partial rows
+            existing_ids.add(r[0])
+            existing_rows.append(dict(zip(header, r)))
+        if existing_rows:
+            print(f"  Resuming: {len(existing_ids)} clips already in manifest.")
+        else:
+            print("  Existing manifest empty/unreadable — starting over.")
     else:
         print(f"  Starting fresh manifest: {manifest_path}")
 

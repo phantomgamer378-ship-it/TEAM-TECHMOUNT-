@@ -102,11 +102,14 @@ class VoiceSpoofDetector:
                 
         mean_diff = float(np.mean(diffs))
         
-        # Domain calibration:
-        # Natural human voice (including phone/mic compression): mean_diff <= ~7.8
-        # AI generated / cloned voice (TTS, voice conversion): mean_diff >= ~9.5
-        theta = 8.6
-        temperature = 1.6
+        # Calibration FIT to the v2 model's measured logit-margin distribution
+        # on the held-out validation split (200 real FLEURS genuine + 100 real
+        # IndicSynth fakes) — see
+        # ai_engine/vanirakshak-aasist/reports/calibration.json and
+        # scripts/derive_calibration.py for the derivation. Re-derive after
+        # any retrain; do not hand-tune.
+        theta = 3.6136
+        temperature = 5.0128
         calibrated_score = float(1.0 / (1.0 + np.exp(-(mean_diff - theta) / temperature)))
         calibrated_score = max(0.0, min(1.0, round(calibrated_score, 4)))
         

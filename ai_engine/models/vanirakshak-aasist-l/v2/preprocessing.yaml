@@ -1,0 +1,7 @@
+sample_rate: 16000
+duration_seconds: 4.0375
+input_length_samples: 64600
+channels: 1
+dtype: float32
+padding: zero
+truncation: exact
