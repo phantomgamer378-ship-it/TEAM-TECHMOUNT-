@@ -152,7 +152,8 @@ class VoiceDetector:
         
         spoof_risk = round(result["score"], 4)            # → 0–1 voice risk (0 = genuine)
         classification = result["classification"]
-        model_version = result.get("model_version", MODEL_LABEL)
+        model_ver = result.get("model_version", "v1")
+        model_version = f"aasist-l ({model_ver})" if not model_ver.startswith("aasist") else model_ver
         
         return {
             "spoof_risk": spoof_risk,

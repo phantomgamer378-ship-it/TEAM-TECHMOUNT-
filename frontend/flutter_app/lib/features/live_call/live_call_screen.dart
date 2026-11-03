@@ -52,6 +52,7 @@ class _LiveCallScreenState extends State<LiveCallScreen> {
   final List<StreamSubscription> _subs = [];
 
   final AudioRecorder _audioRecorder = AudioRecorder();
+  final ScrollController _scrollController = ScrollController();
   Timer? _recordTimer;
   int _recordSeconds = 0;
   String? _recordingPath;
@@ -60,6 +61,7 @@ class _LiveCallScreenState extends State<LiveCallScreen> {
   void dispose() {
     _recordTimer?.cancel();
     _audioRecorder.dispose();
+    _scrollController.dispose();
     for (final s in _subs) {
       s.cancel();
     }
@@ -193,6 +195,7 @@ class _LiveCallScreenState extends State<LiveCallScreen> {
               if (finalScore != null) _riskScore = finalScore;
               _populateFinalSignals(r);
             });
+            _onAnalysisDone();
             await channel.sink.close();
             return;
           case 'error':
@@ -220,11 +223,24 @@ class _LiveCallScreenState extends State<LiveCallScreen> {
             if (riskScore != null) _riskScore = riskScore;
             _populateFinalSignals(r);
           });
+          _onAnalysisDone();
         }
       } catch (e) {
         if (mounted) setState(() => _phase = _CallPhase.idle);
       }
     }
+  }
+
+  void _onAnalysisDone() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
   }
 
   void _updateSignalsFromScore(int score) {
@@ -451,6 +467,7 @@ class _LiveCallScreenState extends State<LiveCallScreen> {
     final riskColor = RiskUtils.color(_riskScore);
 
     return ListView(
+      controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
       children: [
         // Caller identity

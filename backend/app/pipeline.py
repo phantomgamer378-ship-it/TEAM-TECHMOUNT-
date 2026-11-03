@@ -66,6 +66,7 @@ def stream_analysis(
     waveform = pre["waveform"]
 
     # 2. Voice trust ----------------------------------------------------------
+    yield ("stage", 2, "Checking voice", "Evaluating AASIST-L anti-spoof model...")
     voice = services.voice_detector.predict(waveform, source_hint=source_hint)
     voice_ok = "spoof_risk" in voice
     voice_tag = "REAL — AASIST-L" if str(voice.get("model", "")).startswith("aasist") else "DEMO MODE"
@@ -73,6 +74,7 @@ def stream_analysis(
            f"spoof {voice.get('spoof_risk', 0):.4f} {voice.get('status', '')}  [{voice_tag}]")
 
     # 3. ASR ------------------------------------------------------------------
+    yield ("stage", 3, "Understanding", "Transcribing speech with Whisper ASR...")
     asr = services.asr_service.transcribe(waveform, lang=lang, source_hint=source_hint)
     asr_ok = isinstance(asr.get("transcript"), str)
     asr_tag = "REAL" if str(asr.get("model", "")) not in ("", "mock_fallback") else "DEMO MODE"
@@ -80,6 +82,7 @@ def stream_analysis(
            f"{len(asr.get('transcript') or '')} chars  [{asr_tag}]")
 
     # 4. Scam intent ----------------------------------------------------------
+    yield ("stage", 4, "Checking intent", "Analyzing scam keywords & intent...")
     scam = services.scam_detector.analyze(asr.get("transcript") or "", source_hint=source_hint)
     scam_ok = "risk" in scam
     scam_tag = ("REAL — rule engine"
@@ -96,6 +99,7 @@ def stream_analysis(
     yield ("stage", 5, "Attack types", f"{len(attack_types)} label(s)  [pure lookup]")
 
     # 6. Fusion (final score over the full clip) ------------------------------
+    yield ("stage", 6, "Calculating risk", "Fusing voice, intent & contextual signals...")
     context_risk = 0.0  # honest placeholder: no channel/reputation signals yet
     risk = services.risk_engine.fuse(
         voice_risk=voice.get("spoof_risk") if voice_ok else None,

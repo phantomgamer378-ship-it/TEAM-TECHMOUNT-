@@ -14,8 +14,8 @@ class AppConfig {
       case Environment.staging:
         return 'https://vanirakshak-backend-docker.onrender.com';
       case Environment.dev:
-        // Local Mac IP address (192.168.20.165) so emulators and physical devices on WiFi connect
-        return 'http://192.168.20.165:8000';
+        // Local Mac IP address (192.168.43.73) so emulators and physical devices on WiFi connect
+        return 'http://192.168.43.73:8000';
     }
   }
 }

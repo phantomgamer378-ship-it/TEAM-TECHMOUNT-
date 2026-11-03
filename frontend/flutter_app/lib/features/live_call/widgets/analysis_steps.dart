@@ -12,11 +12,11 @@ class AnalysisSteps extends StatelessWidget {
   final String currentStage;
 
   static const _stages = [
-    ('listening', 'Listening', Icons.hearing),
-    ('understanding', 'Understanding', Icons.psychology),
-    ('checking_voice', 'Checking voice', Icons.record_voice_over),
-    ('checking_intent', 'Checking intent', Icons.search),
-    ('calculating', 'Calculating risk', Icons.analytics),
+    ('listening', 'Listening & Audio Setup', Icons.hearing),
+    ('checking_voice', 'Checking voice authenticity', Icons.record_voice_over),
+    ('understanding', 'Understanding conversation', Icons.psychology),
+    ('checking_intent', 'Checking scam intent', Icons.search),
+    ('calculating', 'Calculating threat score', Icons.analytics),
   ];
 
   @override
