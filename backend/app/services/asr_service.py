@@ -34,6 +34,8 @@ tracked via WER/CER per language (§FUTURE ASR TRAINING).
 """
 import logging
 import re
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeoutError
 
 import numpy as np
 
@@ -159,35 +161,66 @@ class ASRService:
         return lang
 
     def _transcribe_faster_whisper(self, waveform: np.ndarray, lang: str) -> dict:
+        """Transcribe with a hard watchdog: CPU whisper can enter multi-minute
+        repetition/hallucination loops on silence/noise-heavy clips (observed
+        live: 11 s of audio ground the server for 3+ min at 220% CPU). §20
+        discipline — a degraded transcript beats a hung pipeline, so on
+        timeout we return the standard fallback shape and move on."""
         lang = self._lang_or_default(lang)
 
-        # faster-whisper accepts float32 16 kHz mono numpy directly.
-        # beam_size=1 provides ~4x faster inference on CPU while preserving transcription quality.
-        segments_iter, info = self.model.transcribe(
-            waveform, language=lang, beam_size=1,
-            vad_filter=False,  # short demo clips; VAD would drop trailing speech
-        )
-        segments, texts = [], []
-        for seg in segments_iter:  # generator — consumes real inference
-            segments.append({"start": round(seg.start, 2), "end": round(seg.end, 2),
-                             "text": seg.text.strip()})
-            texts.append(seg.text.strip())
-        transcript = re.sub(r"\s+", " ", " ".join(texts)).strip()
+        def _run() -> dict:
+            # faster-whisper accepts float32 16 kHz mono numpy directly.
+            #  * beam_size=1        → ~4x faster on CPU, quality preserved
+            #  * vad_filter=True    → skips silence (huge speedup on sparse
+            #                         speech) and starves hallucination loops
+            #  * condition_on_previous_text=False → cuts the classic repeat-
+            #                         forever failure mode on noisy audio
+            segments_iter, info = self.model.transcribe(
+                waveform, language=lang, beam_size=1,
+                vad_filter=True,
+                condition_on_previous_text=False,
+            )
+            segments, texts = [], []
+            for seg in segments_iter:  # generator — consumes real inference
+                segments.append({"start": round(seg.start, 2), "end": round(seg.end, 2),
+                                 "text": seg.text.strip()})
+                texts.append(seg.text.strip())
+            transcript = re.sub(r"\s+", " ", " ".join(texts)).strip()
+            return {
+                "language": lang,
+                "transcript": transcript,
+                "segments": segments,  # real model-provided timing (faster-whisper)
+                # The ONLY confidence the model actually provides: language-ID
+                # probability. Documented semantics — not transcription confidence.
+                "confidence": round(float(info.language_probability), 4),
+            }
 
-        return {
-            "language": lang,
-            "transcript": transcript,
-            "segments": segments,  # real model-provided timing (faster-whisper)
-            # The ONLY confidence the model actually provides: language-ID
-            # probability. Documented semantics — not transcription confidence.
-            "confidence": round(float(info.language_probability), 4),
+        executor = ThreadPoolExecutor(max_workers=1)
+        future = executor.submit(_run)
+        try:
+            result = future.result(timeout=settings.ASR_TIMEOUT_SECONDS)
+        except FuturesTimeoutError:
+            executor.shutdown(wait=False, cancel_futures=True)
+            log.warning("ASRService: transcription exceeded %ss — returning "
+                        "fallback (§20 watchdog)", settings.ASR_TIMEOUT_SECONDS)
+            return {
+                "status": "partial",
+                "error": f"ASR timed out after {settings.ASR_TIMEOUT_SECONDS}s "
+                         "(CPU whisper watchdog) — voice/other signals still apply",
+                "fallback_used": True,
+            }
+        finally:
+            executor.shutdown(wait=False)
+
+        result.update({
             "model": f"faster-whisper-{settings.WHISPER_MODEL} (pretrained, Systran/CTranslate2)",
             "note": (
                 "Off-the-shelf Whisper-class ASR; uneven per-language performance, "
                 "code-mixed speech degrades — not fine-tuned (§6). Whisper does "
                 "NOT judge voice authenticity. PROTOTYPE."
             ),
-        }
+        })
+        return result
 
     def _transcribe_indic_conformer(self, waveform: np.ndarray, lang: str) -> dict:
         import torch

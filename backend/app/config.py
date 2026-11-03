@@ -88,5 +88,10 @@ class Settings:
     # many seconds — replayed/late responses count as FAILED.
     LIVENESS_EXPIRY_SECONDS: int = int(os.getenv("LIVENESS_EXPIRY_SECONDS", "60"))
 
+    # ASR watchdog (§20): CPU whisper can enter multi-minute hallucination
+    # loops on silence/noise-heavy clips; past this, return the fallback
+    # shape and let the rest of the pipeline proceed (degraded, never hung).
+    ASR_TIMEOUT_SECONDS: int = int(os.getenv("ASR_TIMEOUT_SECONDS", "90"))
+
 
 settings = Settings()
